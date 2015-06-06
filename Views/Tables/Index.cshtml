@@ -1,0 +1,19 @@
+﻿@model IEnumerable<string>
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Index</h2>
+
+<table>
+    @foreach (string tableName in Model)
+    {
+        <tr>
+            <td>
+                @tableName
+        </td>
+    </tr>
+    }
+</table>

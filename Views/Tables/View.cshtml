@@ -1,0 +1,39 @@
+﻿@using DAC.Models
+@using DAC.Controllers
+@model TableDataContainer
+
+@{
+    ViewBag.Title = "ViewTable";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>ViewTable</h2>
+
+<button type="button"
+<button type="button" class="btn btn-default" onclick="location.href = 'Tables/Create?Name=@Model.TableName'">Wstaw</button>
+<button type="button" class="btn btn-default" onclick="location.href = 'Tables/Edit?Name=@Model.TableName'">Edytuj</button>
+<input type="number" id="edytujId" />
+<button type="button" class="btn btn-default" onclick="location.href = 'Tables/Create?Name=@Model.TableName'">Usuń</button>
+<input type="number" id="usunId" />
+
+<table>
+    <tr>
+        @foreach (ColumnInfo columnInfo in Model.ColumnsInfo)
+        {
+            <td>
+                @columnInfo.ColumnName
+            </td>
+        }
+    </tr>
+    @for (int i = 0; i < Model.Values[0].Count; i++)
+    {
+        <tr>
+            @foreach (List<object> values in Model.Values)
+            {
+                <td>
+                   @Convert.ToString(values[i])
+                </td>
+            }
+        </tr>
+    }
+</table>

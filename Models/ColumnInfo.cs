@@ -1,0 +1,28 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+
+namespace DAC.Models
+{
+    public class ColumnInfo
+    {
+        public string ColumnName { get; set; }
+        public string DataType { get; set; }
+        public int MaxLength { get; set; }
+        public bool IsNullable { get; set; }
+
+        public ColumnInfo()
+        {
+
+        }
+
+        public ColumnInfo(string columnName, string dataType, int maxLength, bool isNullable)
+        {
+            this.ColumnName = columnName;
+            this.DataType = dataType;
+            this.MaxLength = maxLength;
+            this.IsNullable = IsNullable;
+        }
+    }
+}

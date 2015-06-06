@@ -1,0 +1,32 @@
+﻿@model DAC.Models.CmdInfo
+
+@{
+    ViewBag.Title = "Index";
+    string placeholder = Model == null ? "..." : Model.CmdText;
+}
+
+<br />
+
+@using (Html.BeginForm("ExecuteCommand", "Admin", FormMethod.Post, new { role = "form", name = "sqlCmd", id = "sqlCmd" }))
+{
+    <div class="form-group text-center">
+        @Html.Label("Polecenie SQL", new { })
+    </div>
+    @Html.TextArea("cmdText", @placeholder, 10, 50, new { required = "required", @class = "form-control" })
+    <br />
+    <input type="submit" value="Wykonaj">
+}
+
+@if (Model != null)
+{
+    <br />
+    if (Model.Success)
+    {
+        <p class="alert alert-success">@Model.Msg</p>
+    }
+    else
+    {
+        <p class="alert alert-warning">@Model.Msg</p>
+    }
+}
+
