@@ -1,0 +1,32 @@
+﻿@using DAC.Models
+@using DAC.Controllers
+
+@model TableInfo
+
+@{
+    ViewBag.Title = "Insert";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Create</h2>
+
+@using (Html.BeginForm("Insert", "Tables", /*new RouteValueDictionary(new { Name = @Model.TableName }),*/ FormMethod.Post, new { role = "form", name = "sqlCmd", id = "sqlCmd" }))
+{
+    foreach (ColumnInfo columnInfo in Model.ColumnsInfo)
+    {
+        switch (columnInfo.DataType)
+        {
+            case "int":
+            @columnInfo.ColumnName
+            <input type="number" name="@columnInfo.ColumnName" />
+                break;
+            case "varchar":
+            @columnInfo.ColumnName
+            <input type="text" name="@columnInfo.ColumnName" />
+                break;
+        }
+    }
+    <input type="hidden" name="tableName" value="@Model.TableName">
+    
+    <input type="submit" value="Wykonaj">
+}

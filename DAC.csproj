@@ -164,6 +164,7 @@
     <Content Include="Views\Admin\Index.cshtml" />
     <Content Include="Views\Tables\Index.cshtml" />
     <Content Include="Views\Tables\View.cshtml" />
+    <Content Include="Views\Tables\Insert.cshtml" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

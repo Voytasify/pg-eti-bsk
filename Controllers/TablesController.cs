@@ -23,6 +23,18 @@ namespace DAC.Controllers
         }
     }
 
+    public class TableInfo
+    {
+        public List<ColumnInfo> ColumnsInfo { get; set; }
+        public string TableName { get; set; }
+
+        public TableInfo(List<ColumnInfo> columnsInfo, string tableName)
+        {
+            this.ColumnsInfo = columnsInfo;
+            this.TableName = tableName;
+        }
+    }
+
     public class TablesController : Controller
     {
         //command to retrieve all table names
@@ -130,7 +142,7 @@ namespace DAC.Controllers
             if (!GetTableNames().Contains(Name))
                 return RedirectToAction("Index");
 
-            //fetch data from the table
+            //fetch data about columns 
             List<ColumnInfo> columnsInfo = GetColumnsInfo(Name);
 
             //each list == values by columns
@@ -175,20 +187,61 @@ namespace DAC.Controllers
             return View(new TableDataContainer(columnsInfo, values, Name));
         }
 
-        //create
+        //insert
         [HttpGet]
-        public ActionResult Create(string Name)
+        public ActionResult Insert(string Name)
         {
-            List<string> tableNames = GetTableNames();
+            //if the table does not exist
+            if (!GetTableNames().Contains(Name))
+                return RedirectToAction("Index");
 
-            return View();
+            //fetch data about columns 
+            List<ColumnInfo> columnsInfo = GetColumnsInfo(Name);
+
+            return View(new TableInfo(columnsInfo, Name));
         }
 
-        //create
+        //insert
         [HttpPost]
-        public ActionResult Create(FormCollection forms)
+        public ActionResult Insert(FormCollection forms)
         {
-            return View();
+            //fetch data about columns 
+            List<ColumnInfo> columnsInfo = GetColumnsInfo(forms[forms.Count - 1]);
+
+            string cmdText = "INSERT INTO " + forms[forms.Count - 1] + " VALUES (";
+
+            string s = forms[forms.Count - 1];
+
+            for (int i = 1; i < forms.Count - 1; i++)
+            {
+                if (columnsInfo[i].DataType == "varchar")
+                    cmdText += "'" + forms[i] + "'";
+                else
+                    cmdText += forms[i];
+
+                if (i != forms.Count - 2)
+                    cmdText += ",";
+            }
+
+            cmdText += ");";
+
+            using (SqlConnection connection = new SqlConnection(connectionStr))
+            {
+                SqlCommand cmd = new SqlCommand(cmdText, connection);
+
+                try
+                {
+                    cmd.Connection.Open();
+                    cmd.ExecuteNonQuery();
+                }
+                catch (SqlException)
+                {
+                    //TO DO: handle errors
+                    return RedirectToAction("View", new { Name = s });
+                }
+            }
+
+            return RedirectToAction("View", new { Name = s });
         }
 
         //update

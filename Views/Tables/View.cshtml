@@ -1,5 +1,6 @@
 ﻿@using DAC.Models
 @using DAC.Controllers
+
 @model TableDataContainer
 
 @{
@@ -10,10 +11,10 @@
 <h2>ViewTable</h2>
 
 <button type="button"
-<button type="button" class="btn btn-default" onclick="location.href = 'Tables/Create?Name=@Model.TableName'">Wstaw</button>
-<button type="button" class="btn btn-default" onclick="location.href = 'Tables/Edit?Name=@Model.TableName'">Edytuj</button>
+<button type="button" class="btn btn-default" onclick="location.href = 'Insert?Name=@Model.TableName'">Wstaw</button>
+<button type="button" class="btn btn-default" onclick="location.href = 'Edit?Name=@Model.TableName'">Edytuj</button>
 <input type="number" id="edytujId" />
-<button type="button" class="btn btn-default" onclick="location.href = 'Tables/Create?Name=@Model.TableName'">Usuń</button>
+<button type="button" class="btn btn-default" onclick="location.href = 'Create?Name=@Model.TableName'">Usuń</button>
 <input type="number" id="usunId" />
 
 <table>
