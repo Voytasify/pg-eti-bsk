@@ -1,8 +1,10 @@
-﻿@model DAC.Models.CmdInfo
+﻿@using DAC.Models
+
+@model CmdInfo
 
 @{
     ViewBag.Title = "Index";
-    string placeholder = Model == null ? "..." : Model.CmdText;
+    string placeholder = Model == null ? "" : Model.CmdText;
 }
 
 <br />

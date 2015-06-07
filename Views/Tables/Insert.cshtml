@@ -1,0 +1,36 @@
+﻿@using DAC.Models
+@using DAC.Controllers
+
+@model TableInfo
+
+@{
+    ViewBag.Title = "Insert";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Create</h2>
+
+@using (Html.BeginForm("Insert", "Tables", FormMethod.Post, new { role = "form", name = "sqlCmd", id = "sqlCmd" }))
+{
+    foreach (ColumnInfo columnInfo in Model.ColumnsInfo)
+    {
+        @columnInfo.ColumnName
+        @Html.Raw(" | ")
+        if (!columnInfo.IsIdentity)
+        {
+            <input type="text" name="@columnInfo.ColumnName" />
+        }
+        else
+        {
+            <input type="text" disabled />
+            <input type="text" name="@columnInfo.ColumnName" hidden />
+        }
+        @Html.Raw(" | ")
+        @columnInfo.DataType
+        @Html.Raw(" | ")
+        @columnInfo.IsNullable
+        <br />
+    }
+    <input type="hidden" name="tableName" value="@Model.TableName">
+    <input type="submit" value="Wykonaj">
+}

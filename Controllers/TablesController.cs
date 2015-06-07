@@ -23,13 +23,25 @@ namespace DAC.Controllers
         }
     }
 
+    public class TableInfo
+    {
+        public List<ColumnInfo> ColumnsInfo { get; set; }
+        public string TableName { get; set; }
+
+        public TableInfo(List<ColumnInfo> columnsInfo, string tableName)
+        {
+            this.ColumnsInfo = columnsInfo;
+            this.TableName = tableName;
+        }
+    }
+
     public class TablesController : Controller
     {
         //command to retrieve all table names
         private string getTableNamesCmdText = @"SELECT T.[NAME] AS [table_name] FROM sys.[tables] AS T WHERE t.[is_ms_shipped] = 0";
 
         //command to retrieve columns and datatypes of given table
-        private string getColumnsInfoCmdText = @"SELECT AC.[Name] AS [column_name], TY.[Name] AS system_data_type, AC.[max_length], AC.[is_nullable]
+        private string getColumnsInfoCmdText = @"SELECT AC.[Name] AS [column_name], TY.[Name] AS system_data_type, AC.[max_length], AC.[is_nullable], AC.[is_identity]
             FROM sys.[tables] AS T   
             INNER JOIN sys.[all_columns] AC ON T.[object_id] = AC.[object_id]  
             INNER JOIN sys.[types] TY ON AC.[system_type_id] = TY.[system_type_id] AND AC.[user_type_id] = TY.[user_type_id] 
@@ -105,7 +117,7 @@ namespace DAC.Controllers
                 {
                     while (reader.Read())
                     {
-                        columnsInfo.Add(new ColumnInfo(reader.GetString(0), reader.GetString(1), reader.GetInt16(2), Convert.ToBoolean(reader.GetValue(3))));
+                        columnsInfo.Add(new ColumnInfo(reader.GetString(0), reader.GetString(1), reader.GetInt16(2), Convert.ToBoolean(reader.GetValue(3)), Convert.ToBoolean(reader.GetValue(4))));
                     }
                 }
 
@@ -130,7 +142,7 @@ namespace DAC.Controllers
             if (!GetTableNames().Contains(Name))
                 return RedirectToAction("Index");
 
-            //fetch data from the table
+            //fetch data about columns 
             List<ColumnInfo> columnsInfo = GetColumnsInfo(Name);
 
             //each list == values by columns
@@ -175,20 +187,78 @@ namespace DAC.Controllers
             return View(new TableDataContainer(columnsInfo, values, Name));
         }
 
-        //create
+        //insert
         [HttpGet]
-        public ActionResult Create(string Name)
+        public ActionResult Insert(string Name)
         {
-            List<string> tableNames = GetTableNames();
+            //if the table does not exist
+            if (!GetTableNames().Contains(Name))
+                return RedirectToAction("Index");
 
-            return View();
+            //fetch data about columns 
+            List<ColumnInfo> columnsInfo = GetColumnsInfo(Name);
+
+            return View(new TableInfo(columnsInfo, Name));
         }
 
-        //create
+        //insert
         [HttpPost]
-        public ActionResult Create(FormCollection forms)
+        public ActionResult Insert(FormCollection forms)
         {
-            return View();
+            string tableName = forms["tableName"];
+            //fetch data about columns 
+            List<ColumnInfo> columnsInfo = GetColumnsInfo(tableName);
+
+            string cmdText = "INSERT INTO " + tableName + " ";
+            bool onlyIdentityColumns = true;
+
+            foreach (ColumnInfo columnInfo in columnsInfo)
+            {
+                if (!columnInfo.IsIdentity)
+                {
+                    onlyIdentityColumns = false;
+                    break;
+                }
+            }
+
+            if(onlyIdentityColumns)
+            {
+                cmdText += "DEFAULT VALUES;";
+            }
+            else 
+            {             
+                cmdText += "VALUES (";
+                for (int i = 0; i < forms.Count - 1; i++)
+                {
+                    if(!columnsInfo[i].IsIdentity)
+                    {
+                        cmdText += forms[i];
+                        if (i != forms.Count - 2)
+                        {
+                            cmdText += ",";
+                        }
+                    }
+                }
+                cmdText += ");";
+            }
+
+            using (SqlConnection connection = new SqlConnection(connectionStr))
+            {
+                SqlCommand cmd = new SqlCommand(cmdText, connection);
+
+                try
+                {
+                    cmd.Connection.Open();
+                    cmd.ExecuteNonQuery();
+                }
+                catch (SqlException)
+                {
+                    //TO DO: handle errors
+                    return RedirectToAction("View", new { Name = tableName });
+                }
+            }
+
+            return RedirectToAction("View", new { Name = tableName });
         }
 
         //update
