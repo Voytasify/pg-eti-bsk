@@ -13,11 +13,6 @@ namespace DAC.Models
         public bool IsNullable { get; set; }
         public bool IsIdentity { get; set; }
 
-        public ColumnInfo()
-        {
-
-        }
-
         public ColumnInfo(string columnName, string dataType, int maxLength, bool isNullable, bool isIdentity)
         {
             this.ColumnName = columnName;

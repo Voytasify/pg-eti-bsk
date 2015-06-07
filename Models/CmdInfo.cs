@@ -17,10 +17,5 @@ namespace DAC.Models
             this.Success = success;
             this.Msg = msg;
         }
-
-        public CmdInfo()
-        {
-
-        }
     }
 }

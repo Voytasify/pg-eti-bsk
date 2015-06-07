@@ -1,11 +1,76 @@
-﻿
+﻿@using DAC.Models
+@using DAC.Controllers
+
+@model EntityData
+
 @{
-    ViewBag.Title = "Edit";
+    ViewBag.Title = Model.TableInfo.TableName;
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>Edit</h2>
-
-@ViewBag.id
+<h2>@Model.TableInfo.TableName<small> (edytowanie)</small></h2>
+<hr />
 <br />
-@ViewBag.name
+@using (Html.BeginForm("Edit", "Tables", FormMethod.Post, new { role = "form", @class = "form-vertical" }))
+{
+    List<string> quotationDataTypes = new List<string>() { "date", "datetimeoffset", "datetime", "datetime2", "smalldatetime", "time", "char", "varchar", "text", "nchar", "nvarchar", "ntext" };
+    ColumnInfo columnInfo;
+    string val;
+    
+    for (int i = 0; i < Model.TableInfo.ColumnsInfo.Count; i++)
+    {
+        columnInfo = Model.TableInfo.ColumnsInfo[i];
+        
+        if (quotationDataTypes.Contains(columnInfo.DataType))
+        {
+            val = "'" + Convert.ToString(Model.Values[i]) + "'";
+        }
+        else
+        {
+            val = Convert.ToString(Model.Values[i]);
+        }
+
+          
+        <div class="form-group">
+            <label>
+                <span class="text-primary">@columnInfo.ColumnName</span>
+                <span class="text-muted">
+                    [@{
+                    if (columnInfo.DataType == "varchar")
+                    {
+                        @Html.Raw(columnInfo.DataType + "(" + columnInfo.MaxLength + ")")
+                    }
+                    else
+                    {
+                        @Html.Raw(columnInfo.DataType)
+                    }
+                    }]
+                    @if (columnInfo.IsIdentity)
+                    {
+                        @Html.Raw(" [identity]")
+                    }
+                    @if (!columnInfo.IsNullable)
+                    {
+                        @Html.Raw(" [not null]")
+                    }
+                </span>
+            </label>
+            @if (!columnInfo.IsIdentity)
+            {
+                <input type="text" name="@columnInfo.ColumnName" class="form-control" value="@val" />
+            }
+            else
+            {
+                <input type="text" class="form-control" disabled value="@val"/>
+                <input type="text" name="@columnInfo.ColumnName" hidden value="@val"/>
+            }
+        </div>
+        <br />
+    }
+    <input type="hidden" name="tableName" value="@Model.TableInfo.TableName">
+    <input type="hidden" name="rowId" value="@Model.Id" />
+    <hr />
+    <input type="submit" value="Edytuj">
+}
+<br />
+@Html.ActionLink("Powrót do " + Model.TableInfo.TableName, "View", new { Name = Model.TableInfo.TableName })

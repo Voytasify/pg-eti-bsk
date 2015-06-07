@@ -119,6 +119,9 @@
     </Compile>
     <Compile Include="Models\CmdInfo.cs" />
     <Compile Include="Models\ColumnInfo.cs" />
+    <Compile Include="Models\EntityData.cs" />
+    <Compile Include="Models\TableData.cs" />
+    <Compile Include="Models\TableInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

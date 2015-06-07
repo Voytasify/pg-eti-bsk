@@ -47,6 +47,6 @@ C:\Users\Wojciech Kudirka\Documents\Visual Studio 2013\ff\pg-eti-bsk\bin\System.
 C:\Users\Wojciech Kudirka\Documents\Visual Studio 2013\ff\pg-eti-bsk\bin\System.Web.WebPages.Razor.xml
 C:\Users\Wojciech Kudirka\Documents\Visual Studio 2013\ff\pg-eti-bsk\bin\Antlr3.Runtime.pdb
 C:\Users\Wojciech Kudirka\Documents\Visual Studio 2013\ff\pg-eti-bsk\bin\Newtonsoft.Json.xml
-C:\Users\Wojciech Kudirka\Documents\Visual Studio 2013\ff\pg-eti-bsk\obj\Debug\DAC.csprojResolveAssemblyReference.cache
 C:\Users\Wojciech Kudirka\Documents\Visual Studio 2013\ff\pg-eti-bsk\obj\Debug\DAC.dll
 C:\Users\Wojciech Kudirka\Documents\Visual Studio 2013\ff\pg-eti-bsk\obj\Debug\DAC.pdb
+C:\Users\Wojciech Kudirka\Documents\Visual Studio 2013\ff\pg-eti-bsk\obj\Debug\DAC.csprojResolveAssemblyReference.cache
