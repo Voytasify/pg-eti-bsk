@@ -169,7 +169,7 @@ namespace DAC.Controllers
                     return View(new TableDataContainer(columnsInfo, values, Name));
                 }
 
-                //populate list of table names
+                //get rows
                 if (reader.HasRows)
                 {
                     while (reader.Read())
@@ -279,10 +279,120 @@ namespace DAC.Controllers
         [HttpGet]
         public ActionResult Delete(string Name, int Id)
         {
-            List<string> tableNames = GetTableNames();
-            ViewBag.name = Name;
-            ViewBag.id = Id;
-            return View();
+            string tableName = Name;
+
+            //if the table does not exist
+            if (!GetTableNames().Contains(Name))
+                return RedirectToAction("Index");
+
+            //fetch data about columns 
+            List<ColumnInfo> columnsInfo = GetColumnsInfo(Name);
+
+            //each list == values by columns
+            List<List<object>> values = new List<List<object>>();
+
+            //add as many lists as many columns there is
+            for (int i = 0; i < columnsInfo.Count; i++)
+                values.Add(new List<object>());
+
+            //populate lists
+            using (SqlConnection connection = new SqlConnection(connectionStr))
+            {
+                SqlCommand cmd = new SqlCommand(getRowsCmdText + Name, connection);
+                SqlDataReader reader;
+
+                try
+                {
+                    cmd.Connection.Open();
+                    reader = cmd.ExecuteReader();
+                }
+                catch (SqlException)
+                {
+                    //TO DO: handle errors
+                    return RedirectToAction("View", new { Name = tableName });
+                }
+
+                //get rows
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        for (int i = 0; i < values.Count; i++)
+                        {
+                            values[i].Add(reader.GetValue(i));
+                        }
+                    }
+                }
+
+                reader.Close();
+            }
+
+            string deleteCmdText = "DELETE FROM " + tableName + " WHERE ";
+
+            for (int i = 0; i < values.Count; i++)
+			{
+                deleteCmdText += columnsInfo[i].ColumnName + " = ";
+                switch (columnsInfo[i].DataType)
+	            {
+                    case "int":                  
+                    case "bigint":
+                    case "numeric":
+                    case "smallint":
+                    case "decimal":
+                    case "smallmoney":
+                    case "tinyint":
+                    case "money":
+                    case "bit":
+                        deleteCmdText += Convert.ToInt32(values[i][Id]);
+                        break;
+                    case "float":
+                    case "real":
+                        deleteCmdText += Convert.ToDouble(values[i][Id]);
+                        break;
+                    case "date":
+                    case "datetimeoffset":
+                    case "datetime":
+                    case "datetime2":
+                    case "smalldatetime":
+                    case "time":
+                        deleteCmdText += "'" + Convert.ToString(values[i][Id]) + "'";
+                        break;
+                    case "char":
+                    case "varchar":
+                    case "text":
+                    case "nchar":
+                    case "nvarchar":
+                    case "ntext":
+                        deleteCmdText += "'" + Convert.ToString(values[i][Id]) + "'";
+                        break;
+	            }
+                if(i != values.Count - 1)
+                {
+                    deleteCmdText += " AND ";
+                }
+			}
+
+            deleteCmdText += " ;";
+
+            //delete 
+            using (SqlConnection connection = new SqlConnection(connectionStr))
+            {
+                SqlCommand cmd = new SqlCommand(deleteCmdText, connection);
+                SqlDataReader reader;
+
+                try
+                {
+                    cmd.Connection.Open();
+                    reader = cmd.ExecuteReader();
+                }
+                catch (SqlException)
+                {
+                    //TO DO: handle errors
+                    return RedirectToAction("View", new { Name = tableName });
+                }
+            }
+
+            return RedirectToAction("View", new { Name = tableName });
         }
 
     }

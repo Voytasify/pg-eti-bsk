@@ -25,7 +25,7 @@ namespace DAC.Controllers
         [ActionName("ExecuteCommand")]
         public ActionResult ProcessSqlCmd(FormCollection forms)
         {
-            CmdInfo c = new CmdInfo(forms["cmdText"], true, successMsg);         
+            CmdInfo c = new CmdInfo(forms["deleteCmdText"], true, successMsg);         
             string connectionStr = ConfigurationManager.ConnectionStrings["MainDbConnectionString"].ConnectionString;
 
             using (SqlConnection connection = new SqlConnection(connectionStr))
