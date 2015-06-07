@@ -265,9 +265,13 @@ namespace DAC.Controllers
         [HttpGet]
         public ActionResult Edit(string Name, int Id)
         {
-         //   List<string> tableNames = GetTableNames();
-            ViewBag.name = Name;
-            ViewBag.id = Id;
+            return View();
+        }
+
+        //edit
+        [HttpPost]
+        public ActionResult Edit(FormCollection forms)
+        {
             return View();
         }
 
