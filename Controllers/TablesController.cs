@@ -263,19 +263,21 @@ namespace DAC.Controllers
 
         //update
         [HttpGet]
-        public ActionResult Update(string tableName)
+        public ActionResult Edit(string Name, int Id)
         {
-            List<string> tableNames = GetTableNames();
-
+         //   List<string> tableNames = GetTableNames();
+            ViewBag.name = Name;
+            ViewBag.id = Id;
             return View();
         }
 
         //delete
         [HttpGet]
-        public ActionResult Delete(string tableName)
+        public ActionResult Delete(string Name, int Id)
         {
             List<string> tableNames = GetTableNames();
-
+            ViewBag.name = Name;
+            ViewBag.id = Id;
             return View();
         }
 

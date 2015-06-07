@@ -4,33 +4,55 @@
 @model TableInfo
 
 @{
-    ViewBag.Title = "Insert";
+    ViewBag.Title = Model.TableName;
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>Create</h2>
-
-@using (Html.BeginForm("Insert", "Tables", FormMethod.Post, new { role = "form", name = "sqlCmd", id = "sqlCmd" }))
+<h2>@Model.TableName<small> (wstawianie)</small></h2>
+<hr />
+<br />
+@using (Html.BeginForm("Insert", "Tables", FormMethod.Post, new { role = "form", @class = "form-vertical" }))
 {
     foreach (ColumnInfo columnInfo in Model.ColumnsInfo)
     {
-        @columnInfo.ColumnName
-        @Html.Raw(" | ")
-        if (!columnInfo.IsIdentity)
-        {
-            <input type="text" name="@columnInfo.ColumnName" />
-        }
-        else
-        {
-            <input type="text" disabled />
-            <input type="text" name="@columnInfo.ColumnName" hidden />
-        }
-        @Html.Raw(" | ")
-        @columnInfo.DataType
-        @Html.Raw(" | ")
-        @columnInfo.IsNullable
+        <div class="form-group">
+            <label>
+                <span class="text-primary">@columnInfo.ColumnName</span> 
+                <span class="text-muted"> [@{
+                    if(columnInfo.DataType == "varchar")
+                    {
+                        @Html.Raw(columnInfo.DataType + "(" + columnInfo.MaxLength + ")")
+                    }
+                    else
+                    {
+                        @Html.Raw(columnInfo.DataType)
+                    }
+                    }]
+                    @if (columnInfo.IsIdentity)
+                    {
+                        @Html.Raw(" [identity]")
+                    }
+                    @if (!columnInfo.IsNullable)
+                    {
+                        @Html.Raw(" [not null]")
+                    }
+                    </span>
+            </label>
+            @if (!columnInfo.IsIdentity)
+            {
+                <input type="text" name="@columnInfo.ColumnName" class="form-control" />
+            }
+            else
+            {
+                <input type="text" class="form-control" disabled />
+                <input type="text" name="@columnInfo.ColumnName" hidden />
+            }
+        </div>
         <br />
     }
     <input type="hidden" name="tableName" value="@Model.TableName">
-    <input type="submit" value="Wykonaj">
+    <hr />
+    <input type="submit" value="Wstaw">
 }
+<br />
+@Html.ActionLink("Powrót do " + Model.TableName, "View", new { Name = Model.TableName })
