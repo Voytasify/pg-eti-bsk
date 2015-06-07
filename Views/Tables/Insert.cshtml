@@ -10,23 +10,27 @@
 
 <h2>Create</h2>
 
-@using (Html.BeginForm("Insert", "Tables", /*new RouteValueDictionary(new { Name = @Model.TableName }),*/ FormMethod.Post, new { role = "form", name = "sqlCmd", id = "sqlCmd" }))
+@using (Html.BeginForm("Insert", "Tables", FormMethod.Post, new { role = "form", name = "sqlCmd", id = "sqlCmd" }))
 {
     foreach (ColumnInfo columnInfo in Model.ColumnsInfo)
     {
-        switch (columnInfo.DataType)
+        @columnInfo.ColumnName
+        @Html.Raw(" | ")
+        if (!columnInfo.IsIdentity)
         {
-            case "int":
-            @columnInfo.ColumnName
-            <input type="number" name="@columnInfo.ColumnName" />
-                break;
-            case "varchar":
-            @columnInfo.ColumnName
             <input type="text" name="@columnInfo.ColumnName" />
-                break;
         }
+        else
+        {
+            <input type="text" disabled />
+            <input type="text" name="@columnInfo.ColumnName" hidden />
+        }
+        @Html.Raw(" | ")
+        @columnInfo.DataType
+        @Html.Raw(" | ")
+        @columnInfo.IsNullable
+        <br />
     }
     <input type="hidden" name="tableName" value="@Model.TableName">
-    
     <input type="submit" value="Wykonaj">
 }

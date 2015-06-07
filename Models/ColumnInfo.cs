@@ -11,18 +11,20 @@ namespace DAC.Models
         public string DataType { get; set; }
         public int MaxLength { get; set; }
         public bool IsNullable { get; set; }
+        public bool IsIdentity { get; set; }
 
         public ColumnInfo()
         {
 
         }
 
-        public ColumnInfo(string columnName, string dataType, int maxLength, bool isNullable)
+        public ColumnInfo(string columnName, string dataType, int maxLength, bool isNullable, bool isIdentity)
         {
             this.ColumnName = columnName;
             this.DataType = dataType;
             this.MaxLength = maxLength;
-            this.IsNullable = IsNullable;
+            this.IsNullable =isNullable;
+            this.IsIdentity = isIdentity;
         }
     }
 }

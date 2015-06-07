@@ -4,27 +4,30 @@
 @model TableDataContainer
 
 @{
-    ViewBag.Title = "ViewTable";
+    ViewBag.Title = "View";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>ViewTable</h2>
-
-<button type="button"
-<button type="button" class="btn btn-default" onclick="location.href = 'Insert?Name=@Model.TableName'">Wstaw</button>
-<button type="button" class="btn btn-default" onclick="location.href = 'Edit?Name=@Model.TableName'">Edytuj</button>
-<input type="number" id="edytujId" />
-<button type="button" class="btn btn-default" onclick="location.href = 'Create?Name=@Model.TableName'">Usuń</button>
-<input type="number" id="usunId" />
-
-<table>
+<h2>@Model.TableName</h2>
+<br />
+<div class="container">
+    <div class="btn-group btn-group-justified">
+        <a href="#" class="btn btn-primary">Wstaw</a>
+        <a href="#" class="btn btn-primary">Edytuj</a>
+        <a href="#" class="btn btn-primary">Usuń</a>
+    </div>
+</div>
+<br />
+<br />
+<table class="table table-hover table-bordered">
     <tr>
         @foreach (ColumnInfo columnInfo in Model.ColumnsInfo)
         {
-            <td>
+            <th class="th-mint">
                 @columnInfo.ColumnName
-            </td>
+            </th>
         }
+        <th></th>
     </tr>
     @for (int i = 0; i < Model.Values[0].Count; i++)
     {
@@ -32,9 +35,15 @@
             @foreach (List<object> values in Model.Values)
             {
                 <td>
-                   @Convert.ToString(values[i])
+                    @Convert.ToString(values[i])
                 </td>
             }
+            <td>
+                @Html.RadioButton("rowId", i)
+            </td>
         </tr>
     }
 </table>
+<br />
+<hr />
+@Html.ActionLink("Powrót do Tabele", "Index")

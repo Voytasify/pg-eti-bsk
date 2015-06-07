@@ -41,7 +41,7 @@ namespace DAC.Controllers
         private string getTableNamesCmdText = @"SELECT T.[NAME] AS [table_name] FROM sys.[tables] AS T WHERE t.[is_ms_shipped] = 0";
 
         //command to retrieve columns and datatypes of given table
-        private string getColumnsInfoCmdText = @"SELECT AC.[Name] AS [column_name], TY.[Name] AS system_data_type, AC.[max_length], AC.[is_nullable]
+        private string getColumnsInfoCmdText = @"SELECT AC.[Name] AS [column_name], TY.[Name] AS system_data_type, AC.[max_length], AC.[is_nullable], AC.[is_identity]
             FROM sys.[tables] AS T   
             INNER JOIN sys.[all_columns] AC ON T.[object_id] = AC.[object_id]  
             INNER JOIN sys.[types] TY ON AC.[system_type_id] = TY.[system_type_id] AND AC.[user_type_id] = TY.[user_type_id] 
@@ -117,7 +117,7 @@ namespace DAC.Controllers
                 {
                     while (reader.Read())
                     {
-                        columnsInfo.Add(new ColumnInfo(reader.GetString(0), reader.GetString(1), reader.GetInt16(2), Convert.ToBoolean(reader.GetValue(3))));
+                        columnsInfo.Add(new ColumnInfo(reader.GetString(0), reader.GetString(1), reader.GetInt16(2), Convert.ToBoolean(reader.GetValue(3)), Convert.ToBoolean(reader.GetValue(4))));
                     }
                 }
 
@@ -205,25 +205,42 @@ namespace DAC.Controllers
         [HttpPost]
         public ActionResult Insert(FormCollection forms)
         {
+            string tableName = forms["tableName"];
             //fetch data about columns 
-            List<ColumnInfo> columnsInfo = GetColumnsInfo(forms[forms.Count - 1]);
+            List<ColumnInfo> columnsInfo = GetColumnsInfo(tableName);
 
-            string cmdText = "INSERT INTO " + forms[forms.Count - 1] + " VALUES (";
+            string cmdText = "INSERT INTO " + tableName + " ";
+            bool onlyIdentityColumns = true;
 
-            string s = forms[forms.Count - 1];
-
-            for (int i = 1; i < forms.Count - 1; i++)
+            foreach (ColumnInfo columnInfo in columnsInfo)
             {
-                if (columnsInfo[i].DataType == "varchar")
-                    cmdText += "'" + forms[i] + "'";
-                else
-                    cmdText += forms[i];
-
-                if (i != forms.Count - 2)
-                    cmdText += ",";
+                if (!columnInfo.IsIdentity)
+                {
+                    onlyIdentityColumns = false;
+                    break;
+                }
             }
 
-            cmdText += ");";
+            if(onlyIdentityColumns)
+            {
+                cmdText += "DEFAULT VALUES;";
+            }
+            else 
+            {             
+                cmdText += "VALUES (";
+                for (int i = 0; i < forms.Count - 1; i++)
+                {
+                    if(!columnsInfo[i].IsIdentity)
+                    {
+                        cmdText += forms[i];
+                        if (i != forms.Count - 2)
+                        {
+                            cmdText += ",";
+                        }
+                    }
+                }
+                cmdText += ");";
+            }
 
             using (SqlConnection connection = new SqlConnection(connectionStr))
             {
@@ -237,11 +254,11 @@ namespace DAC.Controllers
                 catch (SqlException)
                 {
                     //TO DO: handle errors
-                    return RedirectToAction("View", new { Name = s });
+                    return RedirectToAction("View", new { Name = tableName });
                 }
             }
 
-            return RedirectToAction("View", new { Name = s });
+            return RedirectToAction("View", new { Name = tableName });
         }
 
         //update
