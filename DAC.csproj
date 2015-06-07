@@ -165,6 +165,8 @@
     <Content Include="Views\Tables\Index.cshtml" />
     <Content Include="Views\Tables\View.cshtml" />
     <Content Include="Views\Tables\Insert.cshtml" />
+    <Content Include="Views\Tables\Edit.cshtml" />
+    <Content Include="Views\Tables\Delete.cshtml" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

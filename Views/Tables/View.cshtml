@@ -10,12 +10,10 @@
 
 <h2>@Model.TableName</h2>
 <br />
-<div class="container">
-    <div class="btn-group btn-group-justified">
-        <a href="#" class="btn btn-primary">Wstaw</a>
-        <a href="#" class="btn btn-primary">Edytuj</a>
-        <a href="#" class="btn btn-primary">Usuń</a>
-    </div>
+<div class="btn-group">
+    <button type="button" class="btn btn-primary" onclick="location.href = 'Insert?Name=@Model.TableName'">Wstaw</button>
+    <button type="button" class="btn btn-primary" onclick="redirectToEdit()">Edytuj</button>
+    <button type="button" class="btn btn-primary" onclick="redirectToDelete()">Usuń</button>
 </div>
 <br />
 <br />
@@ -47,3 +45,34 @@
 <br />
 <hr />
 @Html.ActionLink("Powrót do Tabele", "Index")
+
+<script>
+    function redirectToEdit() {
+        var radioButtons = document.getElementsByTagName("input");
+        var index = -1;
+        for (var i = 0; i < radioButtons.length; i++) {
+            if (radioButtons[i].checked) {
+                index = i;
+                break;
+            }
+        }
+        if(index != -1)
+        {
+            window.location = "Edit?Name=@Model.TableName&Id=" + index;
+        }
+    }
+
+    function redirectToDelete() {
+        var radioButtons = document.getElementsByTagName("input");
+        var index = -1;
+        for (var i = 0; i < radioButtons.length; i++) {
+            if (radioButtons[i].checked) {
+                index = i;
+                break;
+            }
+        }
+        if (index != -1) {
+            window.location = "Delete?Name=@Model.TableName&Id=" + index;
+        }
+    }
+</script>
