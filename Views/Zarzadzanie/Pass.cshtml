@@ -1,0 +1,121 @@
+﻿@{
+    ViewBag.Title = "Przekaż uprawnienia";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    List<string> tableNames = ViewData["tnames"] as List<string>;
+}
+
+@if (ViewBag.ErrMsg != string.Empty)
+{
+    <p class="alert alert-warning">@ViewBag.ErrMsg</p>
+}
+
+@if (ViewBag.Msg != string.Empty)
+{
+    if (ViewBag.Except != null)
+    {
+        string msg = "Następujące uprawnienia nie zostały przekazane, gdyż użytkownik docelowy już je posiadał: ";
+        foreach (string str in ViewBag.Except)
+        {
+            string[] parser = str.Split(' ');
+            msg += parser[0];
+            if (parser[1] == "0")
+            {
+                msg += " - Pokaż ";
+            }
+            else if (parser[1] == "1")
+            {
+                msg += " - Wstaw ";
+            }
+            if (parser[1] == "2")
+            {
+                msg += " - Usuń ";
+            }
+            if (parser[1] == "3")
+            {
+                msg += " - Edytuj ";
+            }
+        }
+        <p class="alert alert-info">@msg</p>
+    }
+    else
+    {
+        <p class="alert alert-info">@ViewBag.Msg</p>
+    }
+
+}
+<h2 class="text-center">Przekaż</h2>
+
+@using (Html.BeginForm("Grant", "Zarzadzanie", FormMethod.Post, new { @role = "form", @class = "form-horizontal" }))
+{
+    <h4 class="text-center"><b>Uprawnienia otrzymywane przez użytkownika docelowego</b></h4>
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Tabela</th>
+                <th>Pokaż</th>
+                <th>Wstaw</th>
+                <th>Usuń</th>
+                <th>Edytuj</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+
+
+    for (int i = 0; i < tableNames.Count; i++)
+    {
+        <tr>
+            <td>
+                @tableNames[i]
+            </td>
+            @for (int j = 0; j < 4; j++)
+            {
+                string nazwa = tableNames[i] + " " + j;
+                <td>
+                    @if (ViewBag.Permissions[i][j] == '2')
+                    {
+                        <span><input type="checkbox" name="@nazwa" /></span>
+                    }
+                    else
+                    {
+                        <span class="glyphicon glyphicon-minus"></span>
+                    }
+                </td>
+            }
+        </tr>
+    }
+            }
+        </tbody>
+    </table>
+    <hr />
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Użytkownik</th>
+                <th>Uprawnienie przejmij</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (string str in ViewData["przejmujacy"] as List<string>)
+            {
+                string[] splitter = str.Split(' ');
+
+                <tr>
+                    <td>@splitter[0]</td>
+                    <td>
+                        @if (splitter[1] == "1")
+                        {
+                            <span class="glyphicon glyphicon-plus"></span>
+                        }
+                        else
+                        {
+                            <span class="glyphicon glyphicon-minus"></span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <p>Użytkownik docelowy @Html.DropDownList("uname", ViewData["list"] as SelectList)</p>
+    <button type="submit" class="btn btn-default">Dalej</button>
+}

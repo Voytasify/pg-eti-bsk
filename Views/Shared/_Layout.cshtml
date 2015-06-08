@@ -9,7 +9,7 @@
 </head>
 <body>
     <div class="container">
-        <nav class="navbar navbar-inverse navbar-default">
+        <nav class="navbar navbar-default navbar-inverse">
             <div class="container-fluid">
                 <div class="navbar-header">
                     <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
@@ -21,9 +21,12 @@
                 </div>
                 <div id="navbar" class="navbar-collapse collapse">
                     <ul class="nav navbar-nav">
-                        <li>@Html.ActionLink("Tabele", "Index", "Tables")</li>
+                        <li>@Html.ActionLink("Moje tabele", "Index", "Tables")</li>
                         <li>@Html.ActionLink("Przekaż", "Pass", "Zarzadzanie")</li>
-                        <li>@Html.ActionLink("Panel admina", "Index", "Admin")</li>
+                        @if (ViewBag.Admin == true)
+                        {
+                            <li>@Html.ActionLink("Panel admina", "Index", "Admin")</li>
+                        }
                     </ul>
                     <ul class="nav navbar-nav navbar-right">
                         <li class="dropdown">

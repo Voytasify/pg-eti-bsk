@@ -113,6 +113,7 @@ namespace DAC.Controllers
         [HttpGet]
         public ActionResult Index()
         {
+            ViewBag.Admin = true;
             return View(GetTableNames());
         }
 

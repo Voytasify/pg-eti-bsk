@@ -1,0 +1,51 @@
+﻿@{
+    ViewBag.Title = "Przekaż uprawnienia";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    TempData["lista"] = ViewData["lista"];
+    TempData["target"] = ViewBag.Uname;
+}
+
+<h2 class="text-center">Wybierz uprawnienia z grantem</h2>
+@using (Html.BeginForm("Index", "Zarzadzanie", FormMethod.Post, new { @role = "form", @class = "form-horizontal" }))
+{
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Uprawnienie</th>
+                <th>Z możliwością grantowania?</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (string perms in ViewData["lista"] as List<string>)
+            {
+                string[] permissions = perms.Split(' ');
+                if (permissions[1] == "0")
+                {
+                    permissions[1] = "Pokaż";
+                }
+                else if (permissions[1] == "1")
+                {
+                    permissions[1] = "Wstaw";
+                }
+                else if (permissions[1] == "2")
+                {
+                    permissions[1] = "Usuń";
+                }
+                else
+                {
+                    permissions[1] = "Edytuj";
+                }
+                string nazwa = permissions[0] + " - " + permissions[1];
+                <tr>
+                    <td>
+                        @nazwa
+                    </td>
+                    <td>
+                        <input type="checkbox" name="@perms" />
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <button type="submit" class="btn btn-default">Przekaż</button>
+}
