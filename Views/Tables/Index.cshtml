@@ -53,7 +53,7 @@
     </tbody>
 </table>
 <hr />
-@if (ViewBag.TakePermission == Permission.No)
+@if (!ViewBag.TakePermission)
 {
     <strong>Przejmij&nbsp;&nbsp;&nbsp;</strong><span class="glyphicon glyphicon-minus-sign"></span>
 }

@@ -32,7 +32,7 @@ namespace DAC.Controllers
             WHERE 
             dc.parent_object_id = OBJECT_ID('Uzytkownicy')
             AND c.name = N'", @"' IF @@ROWCOUNT = 0 BREAK EXEC (@sql) END" };
-        //cmd to set permissions to '2222' to the creator of the new column
+        //cmd to set permissions to '2222' to the creator of the new table
         private const string updateTablePermissionsCmdText = @"UPDATE Uzytkownicy SET Uprawnienia";
 
         [NonAction]
