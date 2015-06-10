@@ -1,19 +1,62 @@
-﻿@model IEnumerable<string>
+﻿@using DAC.Models
+
+@model List<UserPermissions>
 
 @{
-    ViewBag.Title = "Tables";
+    ViewBag.Title = "Tabele";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>Index</h2>
+@helper CreateRow(Permission p)
+{
 
-<table>
-    @foreach (string tableName in Model)
-    {
+    <td>
+        @if (p == Permission.No)
+        {
+            <span class="glyphicon glyphicon-minus-sign"></span>
+        }
+        else if (p == Permission.Yes)
+        {
+            <span class="glyphicon glyphicon-plus-sign"></span>
+        }
+        else
+        {
+            <span class="glyphicon glyphicon-ok-sign"></span>
+        }
+    </td>
+
+}
+<br />
+<table class="table table-hover">
+    <thead>
         <tr>
-            <td>
-                @tableName
-        </td>
-    </tr>
-    }
+            <th class="th-blue">Tabela</th>
+            <th class="th-blue">Select</th>
+            <th class="th-blue">Insert</th>
+            <th class="th-blue">Delete</th>
+            <th class="th-blue">Update</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (UserPermissions u in Model)
+        {
+            <tr>
+                <td>
+                    <button type="button" class="btn btn-info" onclick="location.href = '/Tables/Summary?Name=@u.TableName'">@u.TableName</button>
+                </td>
+                @CreateRow(u.PermissionSelect)
+                @CreateRow(u.PermissionInsert)
+                @CreateRow(u.PermissionDelete)
+                @CreateRow(u.PermissionUpdate)
+            </tr>
+        }
+    </tbody>
 </table>
+<hr />
+<strong>Przejmij&nbsp;&nbsp;&nbsp;</strong><span class="glyphicon glyphicon-minus-sign"></span>
+<hr />
+<ul class="list-group">
+    <li class="list-group-item"><span class="glyphicon glyphicon-minus-sign"></span>&nbsp;&nbsp;&nbsp;Brak uprawnienia</li>
+    <li class="list-group-item"><span class="glyphicon glyphicon-plus-sign"></span>&nbsp;&nbsp;&nbsp;Posiadanie uprawnienia</li>
+    <li class="list-group-item"><span class="glyphicon glyphicon-ok-sign"></span>&nbsp;&nbsp;&nbsp;Posiadanie uprawnienia z grantem</li>
+</ul>

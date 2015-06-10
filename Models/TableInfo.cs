@@ -10,6 +10,8 @@ namespace DAC.Models
         public List<ColumnInfo> ColumnsInfo { get; set; }
         public string TableName { get; set; }
 
+        public TableInfo() { }
+
         public TableInfo(List<ColumnInfo> columnsInfo, string tableName)
         {
             this.ColumnsInfo = columnsInfo;

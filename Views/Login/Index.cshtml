@@ -1,5 +1,5 @@
 ﻿@{
-    ViewBag.Title = "Supreme Airways";
+    ViewBag.Title = "LOT";
     Layout = "~/Views/Shared/_LayoutLogin.cshtml";
 }
 
@@ -22,17 +22,17 @@
     <div class="form-group">
         <div class="col-sm-4"></div>
         <div class="col-sm-8">
-            <button type="submit" class="btn btn-default">Zaloguj</button>
+            <button type="submit" class="btn btn-primary">Zaloguj</button>
         </div>
     </div>
 }
 
 @if (ViewBag.ErrorMsg != null)
 {
-    <p class="alert alert-warning">@ViewBag.ErrorMsg</p>
+    <p class="alert alert-danger">@ViewBag.ErrorMsg</p>
 }
 
 @if (ViewBag.LogoutMsg != null)
 {
-    <p class="alert alert-info">@ViewBag.LogoutMsg</p>
+    <p class="alert alert-success">@ViewBag.LogoutMsg</p>
 }

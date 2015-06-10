@@ -45,17 +45,17 @@
 }
 <h2 class="text-center">Przekaż</h2>
 
-@using (Html.BeginForm("Grant", "Zarzadzanie", FormMethod.Post, new { @role = "form", @class = "form-horizontal" }))
+@using (Html.BeginForm("Grant", "Permissions", FormMethod.Post, new { @role = "form", @class = "form-horizontal" }))
 {
     <h4 class="text-center"><b>Uprawnienia otrzymywane przez użytkownika docelowego</b></h4>
     <table class="table table-hover">
         <thead>
             <tr>
-                <th>Tabela</th>
-                <th>Pokaż</th>
-                <th>Wstaw</th>
-                <th>Usuń</th>
-                <th>Edytuj</th>
+                <th class="th-blue">Tabela</th>
+                <th class="th-blue">Select</th>
+                <th class="th-blue">Insert</th>
+                <th class="th-blue">Delete</th>
+                <th class="th-blue">Update</th>
             </tr>
         </thead>
         <tbody>
@@ -78,7 +78,7 @@
                     }
                     else
                     {
-                        <span class="glyphicon glyphicon-minus"></span>
+                        <span class="glyphicon glyphicon-minus-sign"></span>
                     }
                 </td>
             }
@@ -88,34 +88,36 @@
         </tbody>
     </table>
     <hr />
-    <table class="table table-hover">
-        <thead>
-            <tr>
-                <th>Użytkownik</th>
-                <th>Uprawnienie przejmij</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (string str in ViewData["przejmujacy"] as List<string>)
-            {
-                string[] splitter = str.Split(' ');
-
+    <div>
+        <table style="float:right;width:30%; " class="table table-hover">
+            <thead>
                 <tr>
-                    <td>@splitter[0]</td>
-                    <td>
-                        @if (splitter[1] == "1")
-                        {
-                            <span class="glyphicon glyphicon-plus"></span>
-                        }
-                        else
-                        {
-                            <span class="glyphicon glyphicon-minus"></span>
-                        }
-                    </td>
+                    <th class="th-blue">Użytkownik</th>
+                    <th class="th-blue">Uprawnienie przejmij</th>
                 </tr>
-            }
-        </tbody>
-    </table>
-    <p>Użytkownik docelowy @Html.DropDownList("uname", ViewData["list"] as SelectList)</p>
-    <button type="submit" class="btn btn-default">Dalej</button>
+            </thead>
+            <tbody>
+                @foreach (string str in ViewData["przejmujacy"] as List<string>)
+                {
+                    string[] splitter = str.Split(' ');
+
+                    <tr>
+                        <td>@splitter[0]</td>
+                        <td>
+                            @if (splitter[1] == "1")
+                            {
+                                <span class="glyphicon glyphicon-plus-sign"></span>
+                            }
+                            else
+                            {
+                                <span class="glyphicon glyphicon-minus-sign"></span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <p><h4><b>Użytkownik docelowy</b></h4>@Html.DropDownList("uname", ViewData["list"] as SelectList, new { @class = "dropdown dropdown-header", style = "font-weight:bold; color:black" })</p>
+        <button type="submit" class="btn btn-primary">Dalej</button>
+    </div>
 }

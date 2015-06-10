@@ -1,0 +1,159 @@
+﻿@using DAC.Models
+
+@model TableData
+
+@{
+    ViewBag.Title = Model.TableInfo.TableName;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    List<int> excludedColumns = new List<int>();
+    ColumnInfo columnInfo;
+    List<object> values;
+}
+
+<h2>@Model.TableInfo.TableName</h2>
+<br />
+
+<div class="btn-group">
+    @if (ViewBag.PermissionSelect != Permission.No)
+    {
+        <button type="button" class="btn btn-primary" onclick="location.href = '/Tables/Select?Name=@Model.TableInfo.TableName'">Select</button>
+    }
+    else
+    {
+        <button type="button" class="btn btn-primary" onclick="location.href = '/Tables/Select?Name=@Model.TableInfo.TableName'" disabled>Select</button>
+    }
+    @if (ViewBag.PermissionInsert != Permission.No)
+    {
+        <button type="button" class="btn btn-primary" onclick="location.href = '/Tables/Insert?Name=@Model.TableInfo.TableName'">Insert</button>
+    }
+    else
+    {
+        <button type="button" class="btn btn-primary" onclick="location.href = '/Tables/Insert?Name=@Model.TableInfo.TableName'" disabled>Insert</button>
+    }
+    @if (ViewBag.PermissionUpdate != Permission.No)
+    {
+        <button type="button" class="btn btn-primary" onclick="redirectToEdit()">Update</button>
+    }
+    else
+    {
+        <button type="button" class="btn btn-primary" onclick="redirectToEdit()" disabled>Update</button>
+    }
+    @if (ViewBag.PermissionDelete != Permission.No)
+    {
+        <button type="button" class="btn btn-primary" onclick="redirectToDelete()">Delete</button>
+    }
+    else
+    {
+        <button type="button" class="btn btn-primary" onclick="redirectToDelete()" disabled>Delete</button>
+    }
+</div>
+<br />
+<br />
+@if (ViewBag.SuccessMsgText != null)
+{
+    <p class="alert alert-success"><strong>SUKCES! </strong>@ViewBag.SuccessMsgText</p>
+}
+else if (ViewBag.FailureMsgText != null)
+{
+    <p class="alert alert-danger"><strong>PORAŻKA! </strong>@ViewBag.FailureMsgText</p>
+}
+<br />
+<table class="table table-hover table-bordered">
+    <thead>
+        <tr>
+            @for (int i = 0; i < Model.TableInfo.ColumnsInfo.Count; i++)
+            {
+                columnInfo = Model.TableInfo.ColumnsInfo[i];
+
+                //special treatment for 'Uzytkownicy' table
+                if (Model.TableInfo.TableName == "Uzytkownicy")
+                {
+                    if (columnInfo.ColumnName.Contains("Uprawnienia"))
+                    {
+                        excludedColumns.Add(i);
+                        continue;
+                    }
+                    else if (columnInfo.ColumnName == "czyAdmin")
+                    {
+                        excludedColumns.Add(i);
+                        continue;
+                    }
+                    else if (columnInfo.ColumnName == "UprawnieniePrzejmij")
+                    {
+                        if (ViewBag.Admin == false)
+                        {
+                            excludedColumns.Add(i);
+                            continue;
+                        }
+                    }
+                }
+
+                <th class="th-blue">
+                    @columnInfo.ColumnName
+                </th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @if (ViewBag.SelectPerformed == true)
+        {
+            for (int i = 0; i < Model.Values[0].Count; i++)
+            {
+                <tr>
+                    @for (int j = 0; j < Model.Values.Count; j++)
+                    {
+                        values = Model.Values[j];
+
+                        //special treatment for 'Uzytkownicy' table
+                        if (Model.TableInfo.TableName == "Uzytkownicy")
+                        {
+                            if (excludedColumns.Contains(j))
+                            {
+                                continue;
+                            }
+                        }
+
+                        <td>
+                            @Convert.ToString(values[i])
+                        </td>
+                    }
+                    <td>
+                        @Html.RadioButton("rowId", i)
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+<hr />
+<button type="button" class="btn btn-primary" onclick="location.href = '/Tables/Index'">Powrót do Tabele</button>
+
+<script>
+    function redirectToEdit() {
+        var radioButtons = document.getElementsByTagName("input");
+        var index = -1;
+        for (var i = 0; i < radioButtons.length; i++) {
+            if (radioButtons[i].checked) {
+                index = i;
+                break;
+            }
+        }
+        if (index != -1) {
+            window.location = "/Tables/Edit?Name=@Model.TableInfo.TableName&Id=" + index;
+        }
+    }
+
+    function redirectToDelete() {
+        var radioButtons = document.getElementsByTagName("input");
+        var index = -1;
+        for (var i = 0; i < radioButtons.length; i++) {
+            if (radioButtons[i].checked) {
+                index = i;
+                break;
+            }
+        }
+        if (index != -1) {
+            window.location = "/Tables/Delete?Name=@Model.TableInfo.TableName&Id=" + index;
+        }
+    }
+</script>

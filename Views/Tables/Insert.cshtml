@@ -1,5 +1,4 @@
 ﻿@using DAC.Models
-@using DAC.Controllers
 
 @model TableInfo
 
@@ -8,18 +7,42 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>@Model.TableName<small> (wstawianie)</small></h2>
+<h2>@Model.TableName<small> (insert)</small></h2>
 <hr />
 <br />
 @using (Html.BeginForm("Insert", "Tables", FormMethod.Post, new { role = "form", @class = "form-vertical" }))
 {
     foreach (ColumnInfo columnInfo in Model.ColumnsInfo)
     {
+        //special treatment for 'Uzytkownicy' table
+        if (Model.TableName == "Uzytkownicy")
+        {
+            if (columnInfo.ColumnName.Contains("Uprawnienia"))
+            {
+                <input type="text" name="@columnInfo.ColumnName" value="0000" hidden />
+                continue;
+            }
+            else if (columnInfo.ColumnName == "czyAdmin")
+            {
+                <input type="text" name="@columnInfo.ColumnName" value="false" hidden />
+                continue;
+            }
+            else if (columnInfo.ColumnName == "UprawnieniePrzejmij")
+            {
+                if (ViewBag.Admin == false)
+                {
+                    <input type="text" name="@columnInfo.ColumnName" value="0" hidden />
+                    continue;
+                }
+            }
+        }
+
         <div class="form-group">
             <label>
-                <span class="text-primary">@columnInfo.ColumnName</span> 
-                <span class="text-muted"> [@{
-                    if(columnInfo.DataType == "varchar")
+                <span class="text-primary">@columnInfo.ColumnName</span>
+                <span class="text-muted">
+                    [@{
+                    if (columnInfo.DataType == "varchar")
                     {
                         @Html.Raw(columnInfo.DataType + "(" + columnInfo.MaxLength + ")")
                     }
@@ -36,7 +59,7 @@
                     {
                         @Html.Raw(" [not null]")
                     }
-                    </span>
+                </span>
             </label>
             @if (!columnInfo.IsIdentity)
             {
@@ -48,11 +71,11 @@
                 <input type="text" name="@columnInfo.ColumnName" hidden />
             }
         </div>
-        <br />
     }
     <input type="hidden" name="tableName" value="@Model.TableName">
     <hr />
-    <input type="submit" value="Wstaw">
+    <div class="btn-group">
+        <button type="submit" class="btn btn-primary">Wstaw</button>
+        <button type="button" class="btn btn-primary" onclick="location.href = '/Tables/Summary?Name=@Model.TableName'">Powrót do @Model.TableName</button>
+    </div>
 }
-<br />
-@Html.ActionLink("Powrót do " + Model.TableName, "View", new { Name = Model.TableName })

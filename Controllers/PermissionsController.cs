@@ -8,7 +8,7 @@ using System.Configuration;
 
 namespace DAC.Controllers
 {
-    public class ZarzadzanieController : Controller
+    public class PermissionsController : Controller
     {
         private class Historia
         {
@@ -70,7 +70,7 @@ namespace DAC.Controllers
                         }
                     }
 
-                    com.CommandText = "select Id, UprawnieniaPrzejmij from Uzytkownicy where Nazwa = '" + tname + "'";
+                    com.CommandText = "select Id, UprawnieniePrzejmij from Uzytkownicy where Nazwa = '" + tname + "'";
                     using (SqlDataReader reader = com.ExecuteReader())
                     {
                         while (reader.Read())
@@ -132,7 +132,7 @@ namespace DAC.Controllers
                         {
                             add += "Uprawnienia" + tableNames[i] + "='" + prawa[tableNames[i]] + "', ";
                         }
-                        add += "UprawnieniaPrzejmij = '0'";
+                        add += "UprawnieniePrzejmij = '0'";
                         add += " where Nazwa = '" + tname + "'";
 
                         com.CommandText = add;
@@ -241,7 +241,7 @@ namespace DAC.Controllers
                                 {
                                     if (prawa[splitter[0]][i] == '2' || (prawa[splitter[0]][i] == '1' && !grant.Contains(splitter[0] + " " + i)))
                                     {
-                                        except.Add(asd[i]);                                                      //overwrite protection
+                                        except.Add(splitter[0] + " " + i);                                                      //overwrite protection
                                         cmd += prawa[splitter[0]][i];
                                     }
                                     else
@@ -275,7 +275,7 @@ namespace DAC.Controllers
                 catch (SqlException)
                 {
                     ViewBag.ErrMsg = "Wystąpił problem z połączeniem z bazą danych";
-                    return RedirectToAction("Pass", "Zarzadzanie");
+                    return RedirectToAction("Pass", "Permissions");
                 }
             }
 
@@ -283,7 +283,7 @@ namespace DAC.Controllers
             except.Sort();
             TempData["except"] = except;
 
-            return RedirectToAction("Pass", "Zarzadzanie");
+            return RedirectToAction("Pass", "Permissions");
         }
 
         [Authorize]
@@ -342,7 +342,7 @@ namespace DAC.Controllers
                 try
                 {
                     sql.Open();
-                    SqlCommand com = new SqlCommand("SELECT Nazwa, UprawnieniaPrzejmij FROM Uzytkownicy WHERE Nazwa != '" + username + "'", sql);
+                    SqlCommand com = new SqlCommand("SELECT Nazwa, UprawnieniePrzejmij FROM Uzytkownicy WHERE Nazwa != '" + username + "'", sql);
                     using (SqlDataReader reader = com.ExecuteReader())
                     {
                         while (reader.Read())
@@ -483,7 +483,7 @@ namespace DAC.Controllers
                 catch (SqlException)
                 {
                     ViewBag.ErrMsg = "Nie przekazano uprawnień - wystąpił problem z połączeniem z bazą";
-                    return RedirectToAction("Pass", "Zarzadzanie");
+                    return RedirectToAction("Pass", "Permissions");
                 }
             }
 
@@ -491,12 +491,12 @@ namespace DAC.Controllers
             if (forms.Count == 0 || (forms.Count == 1 && (forms.AllKeys.First(x => x == "uname") != null)))
             {
                 TempData["errMsg"] = "Należy wybrać przynajmniej jedno uprawnienie do przekazania!";
-                return RedirectToAction("Pass", "Zarzadzanie");
+                return RedirectToAction("Pass", "Permissions");
             }
             else if (LoopCheck(userId, targetId, history))
             {
                 TempData["errMsg"] = "Nie można przekazać uprawnień temu użytkownikowi (pętla nadawań)!";
-                return RedirectToAction("Pass", "Zarzadzanie");
+                return RedirectToAction("Pass", "Permissions");
             }
             else
             {

@@ -1,5 +1,4 @@
 ﻿@using DAC.Models
-@using DAC.Controllers
 
 @model EntityData
 
@@ -8,29 +7,42 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>@Model.TableInfo.TableName<small> (edytowanie)</small></h2>
+<h2>@Model.TableInfo.TableName<small> (update)</small></h2>
 <hr />
 <br />
 @using (Html.BeginForm("Edit", "Tables", FormMethod.Post, new { role = "form", @class = "form-vertical" }))
 {
-    List<string> quotationDataTypes = new List<string>() { "date", "datetimeoffset", "datetime", "datetime2", "smalldatetime", "time", "char", "varchar", "text", "nchar", "nvarchar", "ntext" };
     ColumnInfo columnInfo;
     string val;
-    
+
     for (int i = 0; i < Model.TableInfo.ColumnsInfo.Count; i++)
     {
         columnInfo = Model.TableInfo.ColumnsInfo[i];
-        
-        if (quotationDataTypes.Contains(columnInfo.DataType))
-        {
-            val = "'" + Convert.ToString(Model.Values[i]) + "'";
-        }
-        else
-        {
-            val = Convert.ToString(Model.Values[i]);
-        }
+        val = Convert.ToString(Model.Values[i]);
 
-          
+        //special treatment for 'Uzytkownicy' table
+        if (Model.TableInfo.TableName == "Uzytkownicy")
+        {
+            if (columnInfo.ColumnName.Contains("Uprawnienia"))
+            {
+                <input type="text" name="@columnInfo.ColumnName" value="@val" hidden />
+                continue;
+            }
+            else if (columnInfo.ColumnName == "czyAdmin")
+            {
+                <input type="text" name="@columnInfo.ColumnName" value="@val" hidden />
+                continue;
+            }
+            else if (columnInfo.ColumnName == "UprawnieniePrzejmij")
+            {
+                if (ViewBag.Admin == false)
+                {
+                    <input type="text" name="@columnInfo.ColumnName" value="@val" hidden />
+                    continue;
+                }
+            }
+        }
+        
         <div class="form-group">
             <label>
                 <span class="text-primary">@columnInfo.ColumnName</span>
@@ -65,12 +77,12 @@
                 <input type="text" name="@columnInfo.ColumnName" hidden value="@val"/>
             }
         </div>
-        <br />
     }
     <input type="hidden" name="tableName" value="@Model.TableInfo.TableName">
     <input type="hidden" name="rowId" value="@Model.Id" />
     <hr />
-    <input type="submit" value="Edytuj">
+    <div class="btn-group">
+        <button type="submit" class="btn btn-primary">Edytuj</button>
+        <button type="button" class="btn btn-primary" onclick="location.href = '/Tables/Summary?Name=@Model.TableInfo.TableName'">Powrót do @Model.TableInfo.TableName</button>
+    </div>
 }
-<br />
-@Html.ActionLink("Powrót do " + Model.TableInfo.TableName, "View", new { Name = Model.TableInfo.TableName })

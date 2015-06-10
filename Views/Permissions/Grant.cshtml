@@ -6,13 +6,13 @@
 }
 
 <h2 class="text-center">Wybierz uprawnienia z grantem</h2>
-@using (Html.BeginForm("Index", "Zarzadzanie", FormMethod.Post, new { @role = "form", @class = "form-horizontal" }))
+@using (Html.BeginForm("Index", "Permissions", FormMethod.Post, new { @role = "form", @class = "form-horizontal" }))
 {
     <table class="table table-hover">
         <thead>
             <tr>
-                <th>Uprawnienie</th>
-                <th>Z możliwością grantowania?</th>
+                <th class="th-blue">Uprawnienie</th>
+                <th class="th-blue">Z możliwością grantowania?</th>
             </tr>
         </thead>
         <tbody>
@@ -21,19 +21,19 @@
                 string[] permissions = perms.Split(' ');
                 if (permissions[1] == "0")
                 {
-                    permissions[1] = "Pokaż";
+                    permissions[1] = "Select";
                 }
                 else if (permissions[1] == "1")
                 {
-                    permissions[1] = "Wstaw";
+                    permissions[1] = "Insert";
                 }
                 else if (permissions[1] == "2")
                 {
-                    permissions[1] = "Usuń";
+                    permissions[1] = "Delete";
                 }
                 else
                 {
-                    permissions[1] = "Edytuj";
+                    permissions[1] = "Update";
                 }
                 string nazwa = permissions[0] + " - " + permissions[1];
                 <tr>
@@ -47,5 +47,8 @@
             }
         </tbody>
     </table>
-    <button type="submit" class="btn btn-default">Przekaż</button>
+    <div class="btn-group">
+        <button type="submit" class="btn btn-primary">Przekaż</button>
+        <button type="button" class="btn btn-primary" onclick="location.href = '/Permissions/Pass'">Powrót</button>
+    </div>
 }

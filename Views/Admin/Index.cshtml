@@ -3,7 +3,7 @@
 @model CmdInfo
 
 @{
-    ViewBag.Title = "Admin";
+    ViewBag.Title = "Panel admina";
     string placeholder = Model == null ? "" : Model.CmdText;
 }
 
@@ -16,7 +16,7 @@
     </div>
     @Html.TextArea("cmdText", @placeholder, 10, 50, new { required = "required", @class = "form-control" })
     <br />
-    <input type="submit" value="Wykonaj">
+    <button type="submit" class="btn btn-primary">Wykonaj</button>
 }
 
 @if (Model != null)
@@ -24,11 +24,12 @@
     <br />
     if (Model.Success)
     {
-        <p class="alert alert-success">@Model.Msg</p>
+        <p class="alert alert-success"><strong>SUKCES! </strong>@Model.Msg</p>
     }
     else
     {
-        <p class="alert alert-warning">@Model.Msg</p>
+        string[] s = Model.Msg.Split('*');
+        <p class="alert alert-danger"><strong>PORAŻKA! </strong>@s[0]<br />@s[1]</p>
     }
 }
 

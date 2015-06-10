@@ -11,6 +11,8 @@ namespace DAC.Models
         public bool Success { get; set; }
         public string Msg { get; set; }
 
+        public CmdInfo() { }
+
         public CmdInfo(string cmdText, bool success, string msg)
         {
             this.CmdText = cmdText;

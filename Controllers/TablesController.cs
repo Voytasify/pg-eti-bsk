@@ -11,174 +11,240 @@ namespace DAC.Controllers
 {
     public class TablesController : Controller
     {
-        //command to retrieve all table names
-        private readonly string getTableNamesCmdText = @"SELECT T.[NAME] AS [table_name] FROM sys.[tables] AS T WHERE t.[is_ms_shipped] = 0";
-        //command to retrieve columns and datatypes of given table
-        private readonly string getColumnsInfoCmdText = @"SELECT AC.[Name] AS [column_name], TY.[Name] AS system_data_type, AC.[max_length], AC.[is_nullable], AC.[is_identity]
-            FROM sys.[tables] AS T   
-            INNER JOIN sys.[all_columns] AC ON T.[object_id] = AC.[object_id]  
-            INNER JOIN sys.[types] TY ON AC.[system_type_id] = TY.[system_type_id] AND AC.[user_type_id] = TY.[user_type_id] 
-            WHERE T.[Name] = @Name 
-            ORDER BY AC.[column_id];";
-        //command to retrieve rows
-        private readonly string getRowsCmdText = @"SELECT * FROM ";
-        //command to insert row
-        private readonly string insertRowCmdText = @"INSERT INTO ";
-        //command to update row
-        private readonly string updateRowCmdText = @"UPDATE ";
-        //command to delete row
-        private readonly string deleteRowCmdText = @"DELETE FROM ";
+        //cmd to retrieve rows
+        private const string getRowsCmdText = @"SELECT * FROM ";
+        //cmd to insert row
+        private const string insertRowCmdText = @"INSERT INTO ";
+        //cmd to update row
+        private const string updateRowCmdText = @"UPDATE ";
+        //cmd to delete row
+        private const string deleteRowCmdText = @"DELETE FROM ";
         //connection string
         private readonly string connectionStr = ConfigurationManager.ConnectionStrings["MainDbConnectionString"].ConnectionString;
         //list containing string like data types
-        private readonly List<string> stringLikeDataTypes = new List<string>() { "date", "datetimeoffset", "datetime", "datetime2", "smalldatetime", "time", "char", "varchar", "text", "nchar", "nvarchar", "ntext" };
+        private readonly List<string> stringLikeDataTypes = new List<string>() { "bit", "date", "datetimeoffset", "datetime", "datetime2", "smalldatetime", "time", "char", "varchar", "text", "nchar", "nvarchar", "ntext" };
         //list containing int like data types
-        private readonly List<string> intLikeDataTypes = new List<string>() { "int", "bigint", "numeric", "smallint", "decimal", "smallmoney", "tinyint", "money", "bit" };
+        private readonly List<string> intLikeDataTypes = new List<string>() { "int", "bigint", "numeric", "smallint", "decimal", "smallmoney", "tinyint", "money" };
         //list containing float like data types
         private readonly List<string> floatLikeDataTypes = new List<string>() { "float", "real" };
 
-        //get names of all available tables
-        private List<string> GetTableNames()
+        //get user permissions for all available tables, returns bool value inidicating whether data was successfully retrieved from database
+        [NonAction]
+        private bool GetUserPermissions(string username, out List<UserPermissions> permissions)
         {
-            List<string> tableNames = new List<string>();
+            permissions = new List<UserPermissions>();
+            List<string> tableNames = DbManager.GetTableNames();
+            tableNames.Remove("Historia");
 
-            using (SqlConnection connection = new SqlConnection(connectionStr))
+            UserPermissions u = null;
+            foreach (string tableName in tableNames)
             {
-                SqlCommand cmd = new SqlCommand(getTableNamesCmdText, connection);
-                SqlDataReader reader;
-
-                try
-                {
-                    cmd.Connection.Open();
-                    reader = cmd.ExecuteReader();
-                }
-                catch (SqlException)
-                {
-                    //TO DO: handle errors
-                    return tableNames;
-                }
-
-                //populate list of table names
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
-                    {
-                        tableNames.Add(reader.GetString(0));
-                    }
-                }
-
-                reader.Close();
+                if (!GetUserPermissionsForTable(username, tableName, out u))   
+                    return false;
+                else
+                    permissions.Add(u);
             }
-
-            return tableNames;
+            return true;
         }
 
-        //get columnInfos of given table
-        private List<ColumnInfo> GetColumnsInfo(string tableName)
+        //get user permissions for specific table, returns bool value inidicating whether data was successfully retrieved from database
+        [NonAction]
+        private bool GetUserPermissionsForTable(string username, string tableName, out UserPermissions userPermissions)
         {
-            List<ColumnInfo> columnsInfo = new List<ColumnInfo>();
+            List<ColumnInfo> columnsInfo = DbManager.GetColumnsInfo(tableName);
+            string cmdText = @"SELECT Uprawnienia" + tableName + " FROM Uzytkownicy WHERE Nazwa = '" + username + "';";
 
             using (SqlConnection connection = new SqlConnection(connectionStr))
             {
-                SqlCommand cmd = new SqlCommand(getColumnsInfoCmdText, connection);
-                cmd.Parameters.AddWithValue("@Name", tableName);
+                SqlCommand cmd = new SqlCommand(cmdText, connection);
                 SqlDataReader reader;
-
                 try
                 {
-                    cmd.Connection.Open();
+                    connection.Open();
                     reader = cmd.ExecuteReader();
                 }
                 catch (SqlException)
                 {
-                    //TO DO: handle errors
-                    return columnsInfo;
+                    userPermissions = new UserPermissions(tableName, "0000");
+                    return false;
                 }
 
-                //populate list of table names
                 if (reader.HasRows)
                 {
-                    while (reader.Read())
-                    {
-                        columnsInfo.Add(new ColumnInfo(reader.GetString(0), reader.GetString(1), reader.GetInt16(2), Convert.ToBoolean(reader.GetValue(3)), Convert.ToBoolean(reader.GetValue(4))));
-                    }
+                    reader.Read();
+                    string p = Convert.ToString(reader.GetValue(0));
+                    userPermissions = new UserPermissions(tableName, p);
+                    reader.Close();
+                    return true;
                 }
-                reader.Close();
+                else
+                {
+                    userPermissions = new UserPermissions(tableName, "0000");
+                    return false;
+                }
             }
-
-            return columnsInfo;
         }
 
         //list all available tables
+        [Authorize]
         [HttpGet]
         public ActionResult Index()
         {
-            ViewBag.Admin = true;
-            return View(GetTableNames());
-        }
+            //try to fetch username from session data
+            string username = Session["username"] as string;
+            if (username == null)
+              return RedirectToAction("Clear", "Login");
 
-        //select
-        [HttpGet]
-        public ActionResult View(string Name)
-        {
-            //if the table does not exist
-            if (!GetTableNames().Contains(Name))
-                return RedirectToAction("Index");
-
-            //fetch data about columns 
-            List<ColumnInfo> columnsInfo = GetColumnsInfo(Name);
-
-            //each list == values by columns
-            List<List<object>> values = new List<List<object>>();
-
-            //add as many lists as many columns there is
-            for (int i = 0; i < columnsInfo.Count; i++)
-                values.Add(new List<object>());
-
-            //populate lists
-            using (SqlConnection connection = new SqlConnection(connectionStr))
+            //check if user is an administrator
+            bool isAdmin;
+            if (DbManager.IsAdmin(username, out isAdmin))
+                ViewBag.Admin = isAdmin;
+            else
             {
-                SqlCommand cmd = new SqlCommand(getRowsCmdText + Name, connection);
-                SqlDataReader reader;
-
-                try
-                {
-                    cmd.Connection.Open();
-                    reader = cmd.ExecuteReader();
-                }
-                catch (SqlException)
-                {
-                    //TO DO: handle errors
-                    return View(new TableData(values, new TableInfo(columnsInfo, Name)));
-                }
-
-                //get rows
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
-                    {
-                        for (int i = 0; i < values.Count; i++)
-                        {
-                            values[i].Add(reader.GetValue(i));
-                        }
-                    }
-                }
-                reader.Close();
+                //TO DO: handler errors
             }
 
-            return View(new TableData(values, new TableInfo(columnsInfo, Name)));
+            //get user permissions for all availavle tables
+            List<UserPermissions> userPermissions;
+            if(!GetUserPermissions(username, out userPermissions))
+            {
+                //TO DO: handler errors
+            }
+                
+            return View(userPermissions);
+        }
+
+        //summary
+        [Authorize]
+        [HttpGet]
+        public ActionResult Summary(string Name)
+        {
+            //if the table does not exist redirect to index
+            if (!DbManager.GetTableNames().Contains(Name))
+                return RedirectToAction("Index");
+
+            //try to fetch username from session data
+            string username = Session["username"] as string;
+            if (username == null)
+                return RedirectToAction("Clear", "Login");
+
+            UserPermissions u;
+            if(!GetUserPermissionsForTable(username, Name, out u))
+            {
+                //TO DO: handle errors
+                ViewBag.PermissionSelect = Permission.No;
+                ViewBag.PermissionInsert = Permission.No;
+                ViewBag.PermissionUpdate = Permission.No;
+                ViewBag.PermissionDelete = Permission.No;
+            }
+            else
+            {
+                ViewBag.PermissionSelect = u.PermissionSelect;
+                ViewBag.PermissionInsert = u.PermissionInsert;
+                ViewBag.PermissionUpdate = u.PermissionUpdate;
+                ViewBag.PermissionDelete = u.PermissionDelete;
+            }
+
+            //check if user is an administrator
+            bool isAdmin;
+            if (DbManager.IsAdmin(username, out isAdmin))
+                ViewBag.Admin = isAdmin;
+            else
+            {
+                //TO DO: handle errors
+            }
+
+            //possible messages if redirect happened
+            ViewBag.FailureMsgText = TempData["FailureMsgtext"] as string;
+            ViewBag.SuccessMsgText = TempData["SuccessMsgtext"] as string;
+
+            //fetch data about columns 
+            List<ColumnInfo> columnsInfo = DbManager.GetColumnsInfo(Name);
+
+            if (TempData["Select"] != null)
+            {
+                //each list == values by columns
+                List<List<object>> values = new List<List<object>>();
+
+                //add as many lists as many columns there is
+                for (int i = 0; i < columnsInfo.Count; i++)
+                    values.Add(new List<object>());
+
+                //populate lists
+                using (SqlConnection connection = new SqlConnection(connectionStr))
+                {
+                    SqlCommand cmd = new SqlCommand(getRowsCmdText + Name, connection);
+                    SqlDataReader reader;
+
+                    try
+                    {
+                        cmd.Connection.Open();
+                        reader = cmd.ExecuteReader();
+                    }
+                    catch (SqlException)
+                    {
+                        //TO DO: handle errors
+                        return View(new TableData(values, new TableInfo(columnsInfo, Name)));
+                    }
+
+                    //get rows
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            for (int i = 0; i < values.Count; i++)
+                            {
+                                values[i].Add(reader.GetValue(i));
+                            }
+                        }
+                    }
+                    reader.Close();
+                }
+
+                ViewBag.SelectPerformed = true;
+                return View(new TableData(values, new TableInfo(columnsInfo, Name)));
+            }
+            else
+            {
+                ViewBag.SelectPerformed = false;
+                return View(new TableData(null, new TableInfo(columnsInfo, Name)));
+            }
         }
 
         //insert
+        [Authorize]
         [HttpGet]
         public ActionResult Insert(string Name)
         {
-            //if the table does not exist
-            if (!GetTableNames().Contains(Name))
+            //if the table does not exist redirect to index
+            if (!DbManager.GetTableNames().Contains(Name))
                 return RedirectToAction("Index");
 
+            //try to fetch username from session data
+            string username = Session["username"] as string;
+            if (username == null)
+                return RedirectToAction("Clear", "Login");
+
+            //check if user is an administrator
+            bool isAdmin;
+            if (DbManager.IsAdmin(username, out isAdmin))
+                ViewBag.Admin = isAdmin;
+            else
+            {
+                //TO DO: handler errors
+            }
+
+            //check if user has permission to insert to this table
+            UserPermissions u;
+            if (!GetUserPermissionsForTable(username, Name, out u))
+            {
+                //TO DO: handle errors
+            }
+            if (u.PermissionInsert == Permission.No)
+                return RedirectToAction("Index", "Tables");
+
             //fetch data about columns 
-            List<ColumnInfo> columnsInfo = GetColumnsInfo(Name);
+            List<ColumnInfo> columnsInfo = DbManager.GetColumnsInfo(Name);
 
             return View(new TableInfo(columnsInfo, Name));
         }
@@ -187,12 +253,26 @@ namespace DAC.Controllers
         [HttpPost]
         public ActionResult Insert(FormCollection forms)
         {
-            //if the table does not exist
-            if (!GetTableNames().Contains(forms["tableName"]))
+            //if the table does not exist redirect to index
+            if (!DbManager.GetTableNames().Contains(forms["tableName"]))
                 return RedirectToAction("Index");
 
+            //try to fetch username from session data
+            string username = Session["username"] as string;
+            if (username == null)
+                return RedirectToAction("Clear", "Login");
+
+            //check if user is an administrator
+            bool isAdmin;
+            if (DbManager.IsAdmin(username, out isAdmin))
+                ViewBag.Admin = isAdmin;
+            else
+            {
+                //TO DO: handler errors
+            }
+
             //fetch data about columns 
-            List<ColumnInfo> columnsInfo = GetColumnsInfo(forms["tableName"]);
+            List<ColumnInfo> columnsInfo = DbManager.GetColumnsInfo(forms["tableName"]);
 
             string cmdText = insertRowCmdText + forms["tableName"] + " ";
             bool onlyIdentityColumns = true;
@@ -216,8 +296,16 @@ namespace DAC.Controllers
                 {
                     if (!columnsInfo[i].IsIdentity)
                     {
-                        cmdText += forms[i];
-                        if (i != forms.Count - 2)
+                        if (stringLikeDataTypes.Contains(columnsInfo[i].DataType))
+                        {
+                            cmdText += "'" + forms[i] + "'";
+                        }
+                        else
+                        {
+                            cmdText += forms[i];
+                        }
+
+                        if (i != forms.Count - 2 && !columnsInfo[i + 1].IsIdentity)
                             cmdText += ",";
                     }
                 }
@@ -237,25 +325,51 @@ namespace DAC.Controllers
                 catch (SqlException)
                 {
                     //TO DO: handle errors
-                    return RedirectToAction("View", new { Name = forms["tableName"] });
+                    TempData["FailureMsgText"] = "Nie udało się wstawić rekordu.";
+                    return RedirectToAction("Summary", new { Name = forms["tableName"] });
                 }
             }
 
-            return RedirectToAction("View", new { Name = forms["tableName"] });
+            TempData["SuccessMsgText"] = "Rekord został wstawiony.";
+            return RedirectToAction("Summary", new { Name = forms["tableName"] });
         }
 
         //update
+        [Authorize]
         [HttpGet]
         public ActionResult Edit(string Name, int Id)
         {
             string tableName = Name;
 
-            //if the table does not exist
-            if (!GetTableNames().Contains(tableName))
+            //if the table does not exist redirect to index
+            if (!DbManager.GetTableNames().Contains(tableName))
                 return RedirectToAction("Index");
 
+            //try to fetch username from session data
+            string username = Session["username"] as string;
+            if (username == null)
+                return RedirectToAction("Clear", "Login");
+
+            //check if user is an administrator
+            bool isAdmin;
+            if (DbManager.IsAdmin(username, out isAdmin))
+                ViewBag.Admin = isAdmin;
+            else
+            {
+                //TO DO: handler errors
+            }
+
+            //check if user has permission to insert to this table
+            UserPermissions u;
+            if (!GetUserPermissionsForTable(username, Name, out u))
+            {
+                //TO DO: handle errors
+            }
+            if (u.PermissionUpdate == Permission.No)
+                return RedirectToAction("Index", "Tables");
+
             //fetch data about columns 
-            List<ColumnInfo> columnsInfo = GetColumnsInfo(tableName);
+            List<ColumnInfo> columnsInfo = DbManager.GetColumnsInfo(tableName);
 
             //each list == values by columns
             List<List<object>> values = new List<List<object>>();
@@ -278,7 +392,8 @@ namespace DAC.Controllers
                 catch (SqlException)
                 {
                     //TO DO: handle errors
-                    return RedirectToAction("View", new { Name = tableName });
+                    TempData["FailureMsgText"] = "Nie udało się pobrać danych na temat rekordu.";
+                    return RedirectToAction("Summary", new { Name = tableName });
                 }
 
                 //get rows
@@ -306,32 +421,167 @@ namespace DAC.Controllers
             return View(new EntityData(Id, rowValues, new TableInfo(columnsInfo, tableName)));
         }
 
-        //edit
+        //update
         [HttpPost]
         public ActionResult Edit(FormCollection forms)
         {
-            //if the table does not exist
-            if (!GetTableNames().Contains(forms["tableName"]))
+            //if the table does not exist redirect to index
+            if (!DbManager.GetTableNames().Contains(forms["tableName"]))
                 return RedirectToAction("Index");
 
-            //TO DO: everything!
+            //try to fetch username from session data
+            string username = Session["username"] as string;
+            if (username == null)
+                return RedirectToAction("Clear", "Login");
 
-            return RedirectToAction("View", new { Name = forms["tableName"] });
+            //check if user is an administrator
+            bool isAdmin;
+            if (DbManager.IsAdmin(username, out isAdmin))
+                ViewBag.Admin = isAdmin;
+            else
+            {
+                //TO DO: handler errors
+            }
+
+            int rowId = Convert.ToInt32(forms["rowId"]);
+
+            //fetch data about columns 
+            List<ColumnInfo> columnsInfo = DbManager.GetColumnsInfo(forms["tableName"]);
+
+            string cmdText = updateRowCmdText + forms["tableName"] + " SET ";
+
+            for (int i = 0; i < columnsInfo.Count; i++)
+            {
+                if (!columnsInfo[i].IsIdentity)
+                {
+                    cmdText += columnsInfo[i].ColumnName + " = ";
+                    if (stringLikeDataTypes.Contains(columnsInfo[i].DataType))
+                    {
+                        cmdText += "'" + forms[i] + "'";
+                    }
+                    else
+                    {
+                        cmdText += forms[i];
+                    }
+
+                    if (i != columnsInfo.Count - 1 && !columnsInfo[i + 1].IsIdentity)
+                    {
+                        cmdText += ", ";
+                    }
+                }
+            }
+
+            cmdText += " WHERE ";
+
+            //each list == values by columns
+            List<List<object>> values = new List<List<object>>();
+
+            //add as many lists as many columns there is
+            for (int i = 0; i < columnsInfo.Count; i++)
+                values.Add(new List<object>());
+
+            //populate lists
+            using (SqlConnection connection = new SqlConnection(connectionStr))
+            {
+                SqlCommand cmd = new SqlCommand(getRowsCmdText + forms["tableName"], connection);
+                SqlDataReader reader;
+
+                try
+                {
+                    cmd.Connection.Open();
+                    reader = cmd.ExecuteReader();
+                }
+                catch (SqlException)
+                {
+                    //TO DO: handle errors
+                    TempData["FailureMsgText"] = "Edycja rekordu nie powiodła się.";
+                    return RedirectToAction("Summary", new { Name = forms["tableName"] });
+                }
+
+                //get rows
+                if (reader.HasRows)
+                    while (reader.Read())
+                        for (int i = 0; i < values.Count; i++)
+                            values[i].Add(reader.GetValue(i));
+
+                reader.Close();
+            }
+
+            for (int i = 0; i < values.Count; i++)
+            {
+                cmdText += columnsInfo[i].ColumnName + " = ";
+
+                if (stringLikeDataTypes.Contains(columnsInfo[i].DataType))
+                    cmdText += "'" + Convert.ToString(values[i][rowId]) + "'";
+                else if (intLikeDataTypes.Contains(columnsInfo[i].DataType))
+                    cmdText += Convert.ToInt32(values[i][rowId]);
+                else if (floatLikeDataTypes.Contains(columnsInfo[i].DataType))
+                    cmdText += Convert.ToDouble(values[i][rowId]);
+
+                if (i != values.Count - 1)
+                    cmdText += " AND ";
+            }
+
+            cmdText += ";";
+
+            using (SqlConnection connection = new SqlConnection(connectionStr))
+            {
+                SqlCommand cmd = new SqlCommand(cmdText, connection);
+
+                try
+                {
+                    cmd.Connection.Open();
+                    cmd.ExecuteNonQuery();
+                }
+                catch (SqlException)
+                {
+                    //TO DO: handle errors
+                    TempData["FailureMsgText"] = "Edycja rekordu nie powiodła się.";
+                    return RedirectToAction("Summary", new { Name = forms["tableName"] });
+                }
+            }
+
+            TempData["SuccessMsgText"] = "Rekord został zedytowany.";
+            return RedirectToAction("Summary", new { Name = forms["tableName"] });
         }
 
         //delete
+        [Authorize]
         [HttpGet]
         public ActionResult Delete(string Name, int Id)
         {
             //table name
             string tableName = Name;
 
-            //if the table does not exist
-            if (!GetTableNames().Contains(Name))
+            //if the table does not exist redirect to index
+            if (!DbManager.GetTableNames().Contains(tableName))
                 return RedirectToAction("Index");
 
+            //try to fetch username from session data
+            string username = Session["username"] as string;
+            if (username == null)
+                return RedirectToAction("Clear", "Login");
+
+            //check if user is an administrator
+            bool isAdmin;
+            if (DbManager.IsAdmin(username, out isAdmin))
+                ViewBag.Admin = isAdmin;
+            else
+            {
+                //TO DO: handler errors
+            }
+
+            //check if user has permission to insert to this table
+            UserPermissions u;
+            if (!GetUserPermissionsForTable(username, Name, out u))
+            {
+                //TO DO: handle errors
+            }
+            if (u.PermissionDelete == Permission.No)
+                return RedirectToAction("Index", "Tables");
+
             //fetch data about columns 
-            List<ColumnInfo> columnsInfo = GetColumnsInfo(Name);
+            List<ColumnInfo> columnsInfo = DbManager.GetColumnsInfo(Name);
 
             //each list == values by columns
             List<List<object>> values = new List<List<object>>();
@@ -354,7 +604,8 @@ namespace DAC.Controllers
                 catch (SqlException)
                 {
                     //TO DO: handle errors
-                    return RedirectToAction("View", new { Name = tableName });
+                    TempData["FailureMsgText"] = "Nie udało się usunać rekordu.";
+                    return RedirectToAction("Summary", new { Name = tableName });
                 }
 
                 //get rows
@@ -374,7 +625,7 @@ namespace DAC.Controllers
 
                 if (stringLikeDataTypes.Contains(columnsInfo[i].DataType))
                     cmdText += "'" + Convert.ToString(values[i][Id]) + "'";
-                else if(intLikeDataTypes.Contains(columnsInfo[i].DataType))
+                else if (intLikeDataTypes.Contains(columnsInfo[i].DataType))
                     cmdText += Convert.ToInt32(values[i][Id]);
                 else if (floatLikeDataTypes.Contains(columnsInfo[i].DataType))
                     cmdText += Convert.ToDouble(values[i][Id]);
@@ -399,11 +650,43 @@ namespace DAC.Controllers
                 catch (SqlException)
                 {
                     //TO DO: handle errors
-                    return RedirectToAction("View", new { Name = tableName });
+                    TempData["FailureMsgText"] = "Nie udało się usunać rekordu.";
+                    return RedirectToAction("Summary", new { Name = tableName });
                 }
             }
 
-            return RedirectToAction("View", new { Name = tableName });
+            TempData["SuccessMsgText"] = "Rekord został usunięty.";
+            return RedirectToAction("Summary", new { Name = tableName });
+        }
+
+        //select
+        [Authorize]
+        [HttpGet]
+        public ActionResult Select(string Name)
+        {
+            //table name
+            string tableName = Name;
+
+            //if the table does not exist redirect to index
+            if (!DbManager.GetTableNames().Contains(tableName))
+                return RedirectToAction("Index");
+
+            //try to fetch username from session data
+            string username = Session["username"] as string;
+            if (username == null)
+                return RedirectToAction("Clear", "Login");
+
+            //check if user has permission to insert to this table
+            UserPermissions u;
+            if (!GetUserPermissionsForTable(username, Name, out u))
+            {
+                //TO DO: handle errors
+            }
+            if (u.PermissionSelect == Permission.No)
+                return RedirectToAction("Index", "Tables");
+
+            TempData["Select"] = true;
+            return RedirectToAction("Summary", new { Name = tableName });
         }
 
     }

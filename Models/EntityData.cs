@@ -11,6 +11,8 @@ namespace DAC.Models
         public List<object> Values { get; set; }
         public TableInfo TableInfo { get; set; }
 
+        public EntityData() { }
+
         public EntityData(int id, List<object> values, TableInfo tableInfo)
         {
             this.Id = id;
