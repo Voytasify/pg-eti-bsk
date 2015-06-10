@@ -53,7 +53,14 @@
     </tbody>
 </table>
 <hr />
-<strong>Przejmij&nbsp;&nbsp;&nbsp;</strong><span class="glyphicon glyphicon-minus-sign"></span>
+@if (ViewBag.TakePermission == Permission.No)
+{
+    <strong>Przejmij&nbsp;&nbsp;&nbsp;</strong><span class="glyphicon glyphicon-minus-sign"></span>
+}
+else
+{
+    <strong>Przejmij&nbsp;&nbsp;&nbsp;</strong><span class="glyphicon glyphicon-plus-sign"></span>
+}
 <hr />
 <ul class="list-group">
     <li class="list-group-item"><span class="glyphicon glyphicon-minus-sign"></span>&nbsp;&nbsp;&nbsp;Brak uprawnienia</li>

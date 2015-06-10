@@ -28,63 +28,6 @@ namespace DAC.Controllers
         //list containing float like data types
         private readonly List<string> floatLikeDataTypes = new List<string>() { "float", "real" };
 
-        //get user permissions for all available tables, returns bool value inidicating whether data was successfully retrieved from database
-        [NonAction]
-        private bool GetUserPermissions(string username, out List<UserPermissions> permissions)
-        {
-            permissions = new List<UserPermissions>();
-            List<string> tableNames = DbManager.GetTableNames();
-            tableNames.Remove("Historia");
-
-            UserPermissions u = null;
-            foreach (string tableName in tableNames)
-            {
-                if (!GetUserPermissionsForTable(username, tableName, out u))   
-                    return false;
-                else
-                    permissions.Add(u);
-            }
-            return true;
-        }
-
-        //get user permissions for specific table, returns bool value inidicating whether data was successfully retrieved from database
-        [NonAction]
-        private bool GetUserPermissionsForTable(string username, string tableName, out UserPermissions userPermissions)
-        {
-            List<ColumnInfo> columnsInfo = DbManager.GetColumnsInfo(tableName);
-            string cmdText = @"SELECT Uprawnienia" + tableName + " FROM Uzytkownicy WHERE Nazwa = '" + username + "';";
-
-            using (SqlConnection connection = new SqlConnection(connectionStr))
-            {
-                SqlCommand cmd = new SqlCommand(cmdText, connection);
-                SqlDataReader reader;
-                try
-                {
-                    connection.Open();
-                    reader = cmd.ExecuteReader();
-                }
-                catch (SqlException)
-                {
-                    userPermissions = new UserPermissions(tableName, "0000");
-                    return false;
-                }
-
-                if (reader.HasRows)
-                {
-                    reader.Read();
-                    string p = Convert.ToString(reader.GetValue(0));
-                    userPermissions = new UserPermissions(tableName, p);
-                    reader.Close();
-                    return true;
-                }
-                else
-                {
-                    userPermissions = new UserPermissions(tableName, "0000");
-                    return false;
-                }
-            }
-        }
-
         //list all available tables
         [Authorize]
         [HttpGet]
@@ -101,16 +44,23 @@ namespace DAC.Controllers
                 ViewBag.Admin = isAdmin;
             else
             {
-                //TO DO: handler errors
+                //TO DO: handle errors
             }
 
             //get user permissions for all availavle tables
             List<UserPermissions> userPermissions;
-            if(!GetUserPermissions(username, out userPermissions))
+            if(!DbManager.GetUserPermissions(username, out userPermissions))
             {
-                //TO DO: handler errors
+                //TO DO: handle errors
             }
-                
+
+            bool hasTakePermission;
+            if(!DbManager.GetUserTakePermission(username, out hasTakePermission))
+            {
+                //TO DO: handle errors
+            }
+            ViewBag.TakePermission = hasTakePermission;
+
             return View(userPermissions);
         }
 
@@ -129,7 +79,7 @@ namespace DAC.Controllers
                 return RedirectToAction("Clear", "Login");
 
             UserPermissions u;
-            if(!GetUserPermissionsForTable(username, Name, out u))
+            if (!DbManager.GetUserPermissionsForTable(username, Name, out u))
             {
                 //TO DO: handle errors
                 ViewBag.PermissionSelect = Permission.No;
@@ -231,12 +181,12 @@ namespace DAC.Controllers
                 ViewBag.Admin = isAdmin;
             else
             {
-                //TO DO: handler errors
+                //TO DO: handle errors
             }
 
             //check if user has permission to insert to this table
             UserPermissions u;
-            if (!GetUserPermissionsForTable(username, Name, out u))
+            if (!DbManager.GetUserPermissionsForTable(username, Name, out u))
             {
                 //TO DO: handle errors
             }
@@ -268,7 +218,7 @@ namespace DAC.Controllers
                 ViewBag.Admin = isAdmin;
             else
             {
-                //TO DO: handler errors
+                //TO DO: handle errors
             }
 
             //fetch data about columns 
@@ -356,12 +306,12 @@ namespace DAC.Controllers
                 ViewBag.Admin = isAdmin;
             else
             {
-                //TO DO: handler errors
+                //TO DO: handle errors
             }
 
             //check if user has permission to insert to this table
             UserPermissions u;
-            if (!GetUserPermissionsForTable(username, Name, out u))
+            if (!DbManager.GetUserPermissionsForTable(username, Name, out u))
             {
                 //TO DO: handle errors
             }
@@ -440,7 +390,7 @@ namespace DAC.Controllers
                 ViewBag.Admin = isAdmin;
             else
             {
-                //TO DO: handler errors
+                //TO DO: handle errors
             }
 
             int rowId = Convert.ToInt32(forms["rowId"]);
@@ -568,12 +518,12 @@ namespace DAC.Controllers
                 ViewBag.Admin = isAdmin;
             else
             {
-                //TO DO: handler errors
+                //TO DO: handle errors
             }
 
             //check if user has permission to insert to this table
             UserPermissions u;
-            if (!GetUserPermissionsForTable(username, Name, out u))
+            if (!DbManager.GetUserPermissionsForTable(username, Name, out u))
             {
                 //TO DO: handle errors
             }
@@ -678,7 +628,7 @@ namespace DAC.Controllers
 
             //check if user has permission to insert to this table
             UserPermissions u;
-            if (!GetUserPermissionsForTable(username, Name, out u))
+            if (!DbManager.GetUserPermissionsForTable(username, Name, out u))
             {
                 //TO DO: handle errors
             }
