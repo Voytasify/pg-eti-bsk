@@ -13,15 +13,15 @@
     <td>
         @if (p == Permission.No)
         {
-            <span class="glyphicon glyphicon-minus-sign"></span>
+            <span class="glyphicon glyphicon-minus-sign" style="color:red"></span>
         }
         else if (p == Permission.Yes)
         {
-            <span class="glyphicon glyphicon-plus-sign"></span>
+            <span class="glyphicon glyphicon-plus-sign" style="color:orange"></span>
         }
         else
         {
-            <span class="glyphicon glyphicon-ok-sign"></span>
+            <span class="glyphicon glyphicon-ok-sign" style="color:green"></span>
         }
     </td>
 
@@ -55,15 +55,15 @@
 <hr />
 @if (!ViewBag.TakePermission)
 {
-    <strong>Przejmij&nbsp;&nbsp;&nbsp;</strong><span class="glyphicon glyphicon-minus-sign"></span>
+    <strong>Przejmij&nbsp;&nbsp;&nbsp;</strong><span class="glyphicon glyphicon-minus-sign" style="color:red"></span>
 }
 else
 {
-    <strong>Przejmij&nbsp;&nbsp;&nbsp;</strong><span class="glyphicon glyphicon-plus-sign"></span>
+    <strong>Przejmij&nbsp;&nbsp;&nbsp;</strong><span class="glyphicon glyphicon-plus-sign" style="color:orange"></span>
 }
 <hr />
 <ul class="list-group">
-    <li class="list-group-item"><span class="glyphicon glyphicon-minus-sign"></span>&nbsp;&nbsp;&nbsp;Brak uprawnienia</li>
-    <li class="list-group-item"><span class="glyphicon glyphicon-plus-sign"></span>&nbsp;&nbsp;&nbsp;Posiadanie uprawnienia</li>
-    <li class="list-group-item"><span class="glyphicon glyphicon-ok-sign"></span>&nbsp;&nbsp;&nbsp;Posiadanie uprawnienia z grantem</li>
+    <li class="list-group-item"><span class="glyphicon glyphicon-minus-sign" style="color:red"></span>&nbsp;&nbsp;&nbsp;Brak uprawnienia</li>
+    <li class="list-group-item"><span class="glyphicon glyphicon-plus-sign" style="color:orange"></span>&nbsp;&nbsp;&nbsp;Posiadanie uprawnienia</li>
+    <li class="list-group-item"><span class="glyphicon glyphicon-ok-sign" style="color:green"></span>&nbsp;&nbsp;&nbsp;Posiadanie uprawnienia z grantem</li>
 </ul>

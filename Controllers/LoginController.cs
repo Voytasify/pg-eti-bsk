@@ -114,10 +114,8 @@ namespace bsk.Controllers
                 else
                 {
                     FormsAuthentication.SetAuthCookie(username, false);
-                    Session.Timeout = 20;
+                    Session.Timeout = 30;
                     Session.Add("username", username);
-
-             //       ViewBag.Admin = czyAdmin;
 
                     return RedirectToAction("Index", "Tables");
                 }
