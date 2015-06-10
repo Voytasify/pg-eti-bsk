@@ -32,20 +32,23 @@ namespace DAC.Controllers
             WHERE 
             dc.parent_object_id = OBJECT_ID('Uzytkownicy')
             AND c.name = N'", @"' IF @@ROWCOUNT = 0 BREAK EXEC (@sql) END" };
+        //cmd to set permissions to '2222' to the creator of the new column
+        private const string updateTablePermissionsCmdText = @"UPDATE Uzytkownicy SET Uprawnienia";
 
         [NonAction]
-        private bool addColumnToUsers(string tableName)
+        private bool addColumnToUsers(string tableName, string executorName)
         {
             bool result = true;
 
             using (SqlConnection connection = new SqlConnection(connectionStr))
             {
                 SqlCommand comAlter = new SqlCommand(addColumnCmdText + tableName + " VARCHAR(4) NOT NULL DEFAULT '0000';", connection);
-
+                SqlCommand comUpdate = new SqlCommand(updateTablePermissionsCmdText + tableName + " = '2222' WHERE Nazwa = '" + executorName + "';", connection);
                 try
                 {
                     comAlter.Connection.Open();
                     comAlter.ExecuteNonQuery();
+                    comUpdate.ExecuteNonQuery();
                 }
                 catch (SqlException)
                 {
@@ -90,7 +93,7 @@ namespace DAC.Controllers
         }
 
         [NonAction]
-        private bool fixDbIntegrity()
+        private bool fixDbIntegrity(string executorName)
         {
             bool result = true;
             List<string> tableNames = DbManager.GetTableNames();
@@ -117,7 +120,7 @@ namespace DAC.Controllers
 
                 if (!columnExist)
                 {
-                    if (!addColumnToUsers(t))
+                    if (!addColumnToUsers(t, executorName))
                     {
                         result = false;
                     }
@@ -172,6 +175,11 @@ namespace DAC.Controllers
         [ActionName("ExecuteCommand")]
         public ActionResult ProcessSqlCmd(FormCollection forms)
         {
+            //try to fetch username from session data
+            string username = Session["username"] as string;
+            if (username == null)
+                return RedirectToAction("Clear", "Login");
+
             CmdInfo c = new CmdInfo(forms["cmdText"], true, successMsgText);
 
             using (SqlConnection connection = new SqlConnection(connectionStr))
@@ -191,7 +199,7 @@ namespace DAC.Controllers
                 finally
                 {
                     TempData["cmdInfo"] = c;
-                    fixDbIntegrity();
+                    fixDbIntegrity(username);
                 }
 
                 return RedirectToAction("Index");
